@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireClient } from "@/lib/auth/require";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyAgencyOfClientActivity } from "@/lib/notifications";
 
 export async function approvePost(formData: FormData) {
   const { client } = await requireClient();
@@ -12,7 +13,7 @@ export async function approvePost(formData: FormData) {
   const admin = createAdminClient();
   const { data: post } = await admin
     .from("posts")
-    .select("client_id, status")
+    .select("client_id, status, caption")
     .eq("id", postId)
     .maybeSingle();
 
@@ -27,6 +28,8 @@ export async function approvePost(formData: FormData) {
     previous_status: post.status,
     new_status: "aprovado",
   });
+
+  await notifyAgencyOfClientActivity(post.caption, "aprovado", null);
 
   revalidatePath("/portal/para-aprovar");
   redirect("/portal/para-aprovar");
@@ -44,7 +47,7 @@ export async function requestAdjustment(formData: FormData) {
   const admin = createAdminClient();
   const { data: post } = await admin
     .from("posts")
-    .select("client_id, status")
+    .select("client_id, status, caption")
     .eq("id", postId)
     .maybeSingle();
 
@@ -60,6 +63,8 @@ export async function requestAdjustment(formData: FormData) {
     new_status: "ajuste_pedido",
     comment,
   });
+
+  await notifyAgencyOfClientActivity(post.caption, "ajuste_pedido", comment);
 
   revalidatePath("/portal/para-aprovar");
   redirect("/portal/para-aprovar");

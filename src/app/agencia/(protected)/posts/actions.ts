@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAgencyMember } from "@/lib/auth/require";
+import { notifyClientNewPostForApproval } from "@/lib/notifications";
 
 const VALID_TYPES = ["imagem", "carrossel", "reels"];
 
@@ -67,7 +68,7 @@ export async function changePostStatus(formData: FormData) {
 
   const { data: post } = await supabase
     .from("posts")
-    .select("status")
+    .select("status, clients(auth_user_id)")
     .eq("id", postId)
     .maybeSingle();
 
@@ -83,6 +84,13 @@ export async function changePostStatus(formData: FormData) {
     new_status: newStatus,
     comment,
   });
+
+  if (newStatus === "com_cliente") {
+    const clientInfo = post.clients as unknown as { auth_user_id: string } | null;
+    if (clientInfo?.auth_user_id) {
+      await notifyClientNewPostForApproval(clientInfo.auth_user_id);
+    }
+  }
 
   revalidatePath("/agencia/posts");
   revalidatePath(`/agencia/posts/${postId}`);
