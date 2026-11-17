@@ -25,7 +25,7 @@ export default async function NovoPostPage({
       <h1 className="text-xl font-semibold">Novo post</h1>
       {error && <ErrorBanner message={ERROR_MESSAGES[error] ?? "Não foi possível criar."} />}
 
-      <form action={createPost} className="space-y-4" encType="multipart/form-data">
+      <form action={createPost} className="space-y-4">
         <div className="space-y-1">
           <label htmlFor="client_id" className="text-sm text-neutral-400">
             Cliente

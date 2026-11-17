@@ -21,7 +21,7 @@ export default async function NovoClientePage({
       <h1 className="text-xl font-semibold">Novo cliente</h1>
       {error && <ErrorBanner message={ERROR_MESSAGES[error] ?? "Não foi possível cadastrar."} />}
 
-      <form action={createClientAccount} className="space-y-4" encType="multipart/form-data">
+      <form action={createClientAccount} className="space-y-4">
         <Field label="Nome do cliente" name="name" required />
         <Field label="E-mail de login do cliente" name="email" type="email" required />
         <Field

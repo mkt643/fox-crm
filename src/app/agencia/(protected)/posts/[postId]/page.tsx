@@ -25,7 +25,7 @@ export default async function PostDetailPage({
 
   if (!post) notFound();
 
-  const clientName = (post.clients as { name: string }[] | null)?.[0]?.name ?? "—";
+  const clientName = (post.clients as unknown as { name: string } | null)?.name ?? "—";
 
   const { data: media } = await supabase
     .from("post_media")

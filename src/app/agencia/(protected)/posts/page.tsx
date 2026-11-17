@@ -41,7 +41,7 @@ export default async function AgenciaPostsPage() {
                     className="block rounded-md border border-neutral-800 bg-neutral-900 p-3 text-sm hover:border-neutral-600"
                   >
                     <p className="font-medium">
-                      {(post.clients as { name: string }[] | null)?.[0]?.name ?? "—"}
+                      {(post.clients as unknown as { name: string } | null)?.name ?? "—"}
                     </p>
                     <p className="text-neutral-400">
                       {post.type} · {post.scheduled_date ?? "sem data"}
