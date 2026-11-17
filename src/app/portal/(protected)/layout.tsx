@@ -6,12 +6,39 @@ export default async function PortalProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { client } = await requireClient();
+  const { supabase, client } = await requireClient();
+
+  const { data: branding } = await supabase
+    .from("clients")
+    .select("primary_color, logo_path")
+    .eq("id", client.id)
+    .maybeSingle();
+
+  let logoUrl: string | undefined;
+  if (branding?.logo_path) {
+    const { data } = await supabase.storage
+      .from("brand-assets")
+      .createSignedUrl(branding.logo_path, 60 * 60);
+    logoUrl = data?.signedUrl;
+  }
+
+  const accentColor = branding?.primary_color || "#e5e5e5";
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
-      <nav className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800 px-6 py-4 text-sm">
-        <div className="flex flex-wrap gap-4">
+      <nav
+        className="flex flex-wrap items-center justify-between gap-4 border-b-2 px-6 py-4 text-sm"
+        style={{ borderBottomColor: accentColor }}
+      >
+        <div className="flex flex-wrap items-center gap-4">
+          {logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt={client.name}
+              className="h-8 w-8 rounded bg-white object-contain"
+            />
+          )}
           <a href="/portal/para-aprovar">Para aprovar</a>
           <a href="/portal/calendario">Calendário</a>
           <a href="/portal/estrategia">Estratégia</a>

@@ -1,10 +1,19 @@
-export default function ComoFuncionaPage() {
+import { requireClient } from "@/lib/auth/require";
+
+export default async function ComoFuncionaPage() {
+  const { supabase } = await requireClient();
+  const { data } = await supabase
+    .from("how_it_works_content")
+    .select("content")
+    .eq("id", 1)
+    .maybeSingle();
+
   return (
-    <div className="space-y-2">
+    <div className="max-w-2xl space-y-4">
       <h1 className="text-xl font-semibold">Como funciona</h1>
-      <p className="text-sm text-neutral-400">
-        Explicação do fluxo de trabalho para o cliente (Fase 4).
-      </p>
+      <div className="whitespace-pre-wrap rounded-md border border-neutral-800 bg-neutral-900 p-4 text-sm">
+        {data?.content || "Em breve vamos explicar aqui como funciona nosso processo."}
+      </div>
     </div>
   );
 }

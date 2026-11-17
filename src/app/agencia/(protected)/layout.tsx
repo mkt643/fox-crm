@@ -15,6 +15,7 @@ export default async function AgenciaProtectedLayout({
           <a href="/agencia/dashboard">Dashboard</a>
           <a href="/agencia/clientes">Clientes</a>
           <a href="/agencia/posts">Fila de aprovação</a>
+          <a href="/agencia/como-funciona">Como funciona</a>
         </div>
         <form action={signOutAgencia} className="flex items-center gap-3">
           <span className="text-neutral-400">{member.name}</span>
