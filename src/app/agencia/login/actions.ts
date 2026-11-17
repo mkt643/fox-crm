@@ -14,7 +14,10 @@ export async function signInAgencia(formData: FormData) {
   });
 
   if (error || !data.user) {
-    redirect("/agencia/login?error=credenciais");
+    console.error("[DEBUG] signInAgencia:", error);
+    redirect(
+      `/agencia/login?error=credenciais&debug=${encodeURIComponent(error?.message ?? "sem usuario")}`,
+    );
   }
 
   const { data: member } = await supabase
