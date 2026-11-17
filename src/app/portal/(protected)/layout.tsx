@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireClient } from "@/lib/auth/require";
 import { signOutPortal } from "../login/actions";
 
 export default async function PortalProtectedLayout({
@@ -7,24 +6,7 @@ export default async function PortalProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/portal/login");
-  }
-
-  const { data: client } = await supabase
-    .from("clients")
-    .select("name")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  if (!client) {
-    redirect("/portal/login");
-  }
+  const { client } = await requireClient();
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
