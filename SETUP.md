@@ -39,6 +39,11 @@ Na Fase 6 (deploy), os passos serão:
 3. Aguardar propagação do DNS (minutos a algumas horas) — a Vercel emite o
    certificado SSL automaticamente depois que o CNAME propagar.
 
+## 5. Banco de dados (Fase 1)
+Schema pronto em `supabase/migrations/`. Passo a passo de como aplicar e
+como criar o primeiro usuário da agência e um cliente de teste está em
+[`supabase/README.md`](./supabase/README.md).
+
 ---
 Depois que Supabase e Resend estiverem criados e as chaves no `.env.local`,
 sigo para a Fase 1 (modelagem do banco de dados).
