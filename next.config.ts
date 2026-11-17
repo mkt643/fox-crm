@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Cache Components força anotar manualmente toda rota dinâmica; como o
+  // app inteiro é autenticado por usuário (cookies/Supabase), desligamos.
   turbopack: {
     rules: {
       "*.css": {
