@@ -8,9 +8,9 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function AgenciaLoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; debug?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const { error, debug } = await searchParams;
+  const { error } = await searchParams;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-neutral-950 p-8 text-neutral-100">
@@ -19,11 +19,6 @@ export default async function AgenciaLoginPage({
         {error && (
           <p className="rounded-md bg-red-950 px-3 py-2 text-sm text-red-300">
             {ERROR_MESSAGES[error] ?? "Não foi possível entrar."}
-          </p>
-        )}
-        {debug && (
-          <p className="break-all rounded-md bg-yellow-950 px-3 py-2 text-xs text-yellow-300">
-            DEBUG: {debug}
           </p>
         )}
         <div className="space-y-1">
