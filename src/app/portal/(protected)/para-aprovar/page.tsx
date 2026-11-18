@@ -41,13 +41,13 @@ export default async function ParaAprovarPage({
     <div className="mx-auto max-w-md space-y-8">
       <h1 className="text-xl font-semibold">Para aprovar</h1>
       {error === "comentario_obrigatorio" && (
-        <p className="rounded-md bg-red-950 px-3 py-2 text-sm text-red-300">
+        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           Escreva um comentário explicando o ajuste antes de enviar.
         </p>
       )}
 
       {!postsWithMedia.length && (
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-neutral-500">
           Nenhum post aguardando sua aprovação no momento.
         </p>
       )}
@@ -55,7 +55,7 @@ export default async function ParaAprovarPage({
       {postsWithMedia.map((post) => (
         <article
           key={post.id}
-          className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900"
+          className="overflow-hidden rounded-lg border border-neutral-200 bg-white"
         >
           <div className="aspect-square bg-black">
             {post.media[0]?.kind === "video" ? (
@@ -90,7 +90,7 @@ export default async function ParaAprovarPage({
                 name="comment"
                 rows={2}
                 placeholder="Comentário (obrigatório para pedir ajuste)"
-                className="w-full rounded-md border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-neutral-300 bg-fox-cream px-3 py-2 text-sm"
               />
               <div className="flex gap-2">
                 <button
@@ -103,7 +103,7 @@ export default async function ParaAprovarPage({
                 <button
                   type="submit"
                   formAction={requestAdjustment}
-                  className="flex-1 rounded-md border border-neutral-700 px-4 py-2 text-sm font-medium hover:bg-neutral-800"
+                  className="flex-1 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-fox-cream"
                 >
                   Pedir ajuste
                 </button>

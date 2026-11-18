@@ -1,3 +1,5 @@
+import Image from "next/image";
+import { Field, ErrorBanner } from "@/components/form-field";
 import { signInPortal } from "./actions";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -13,45 +15,29 @@ export default async function PortalLoginPage({
   const { error } = await searchParams;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-950 p-8 text-neutral-100">
-      <form action={signInPortal} className="w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-semibold">Portal do cliente</h1>
-        {error && (
-          <p className="rounded-md bg-red-950 px-3 py-2 text-sm text-red-300">
-            {ERROR_MESSAGES[error] ?? "Não foi possível entrar."}
-          </p>
-        )}
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm text-neutral-400">
-            E-mail
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm text-neutral-400">
-            Senha
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full rounded-md bg-neutral-100 px-4 py-2 font-medium text-neutral-900 hover:bg-neutral-300"
-        >
-          Entrar
-        </button>
-      </form>
+    <main className="flex min-h-screen">
+      <div className="hidden w-1/2 flex-col items-center justify-center bg-fox-olive p-12 md:flex">
+        <Image
+          src="/brand/fox-wordmark-on-olive.png"
+          alt="FOX — Agência de Marketing"
+          width={260}
+          height={260}
+        />
+      </div>
+      <div className="flex w-full items-center justify-center bg-fox-cream p-8 md:w-1/2">
+        <form action={signInPortal} className="w-full max-w-sm space-y-4">
+          <h1 className="text-xl font-semibold text-neutral-900">Portal do cliente</h1>
+          {error && <ErrorBanner message={ERROR_MESSAGES[error] ?? "Não foi possível entrar."} />}
+          <Field label="E-mail" name="email" type="email" required />
+          <Field label="Senha" name="password" type="password" required />
+          <button
+            type="submit"
+            className="w-full rounded-md bg-fox-orange px-4 py-2 font-medium text-white hover:bg-fox-orange-dark"
+          >
+            Entrar
+          </button>
+        </form>
+      </div>
     </main>
   );
 }

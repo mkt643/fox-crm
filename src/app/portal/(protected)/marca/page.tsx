@@ -43,23 +43,23 @@ export default async function MarcaPage() {
           <img
             src={logoUrl}
             alt="Logo"
-            className="h-20 w-20 rounded-md border border-neutral-800 bg-white object-contain p-2"
+            className="h-20 w-20 rounded-md border border-neutral-200 bg-white object-contain p-2"
           />
         )}
         <div className="flex gap-3">
           {clientRow?.primary_color && (
-            <div className="text-center text-xs text-neutral-400">
+            <div className="text-center text-xs text-neutral-500">
               <span
-                className="block h-10 w-10 rounded-full border border-neutral-700"
+                className="block h-10 w-10 rounded-full border border-neutral-300"
                 style={{ backgroundColor: clientRow.primary_color }}
               />
               {clientRow.primary_color}
             </div>
           )}
           {clientRow?.secondary_color && (
-            <div className="text-center text-xs text-neutral-400">
+            <div className="text-center text-xs text-neutral-500">
               <span
-                className="block h-10 w-10 rounded-full border border-neutral-700"
+                className="block h-10 w-10 rounded-full border border-neutral-300"
                 style={{ backgroundColor: clientRow.secondary_color }}
               />
               {clientRow.secondary_color}
@@ -69,19 +69,19 @@ export default async function MarcaPage() {
       </div>
 
       {!assetsWithUrls.length ? (
-        <p className="text-sm text-neutral-400">Nenhum material adicional publicado ainda.</p>
+        <p className="text-sm text-neutral-500">Nenhum material adicional publicado ainda.</p>
       ) : (
         <ul className="space-y-2">
           {assetsWithUrls.map((asset) => (
-            <li key={asset.id} className="rounded-md border border-neutral-800 p-3 text-sm">
+            <li key={asset.id} className="rounded-md border border-neutral-200 p-3 text-sm">
               <p className="font-medium">{asset.label}</p>
-              {asset.value && <p className="text-neutral-400">{asset.value}</p>}
+              {asset.value && <p className="text-neutral-500">{asset.value}</p>}
               {asset.url && (
                 <a
                   href={asset.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-neutral-400 underline"
+                  className="text-neutral-500 underline"
                 >
                   Ver arquivo
                 </a>

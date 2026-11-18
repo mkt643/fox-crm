@@ -27,14 +27,14 @@ export default async function NovoPostPage({
 
       <form action={createPost} className="space-y-4">
         <div className="space-y-1">
-          <label htmlFor="client_id" className="text-sm text-neutral-400">
+          <label htmlFor="client_id" className="text-sm text-neutral-500">
             Cliente
           </label>
           <select
             id="client_id"
             name="client_id"
             required
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm"
           >
             <option value="">Selecione...</option>
             {clients?.map((c) => (
@@ -46,14 +46,14 @@ export default async function NovoPostPage({
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="type" className="text-sm text-neutral-400">
+          <label htmlFor="type" className="text-sm text-neutral-500">
             Tipo
           </label>
           <select
             id="type"
             name="type"
             required
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm"
           >
             <option value="imagem">Imagem</option>
             <option value="carrossel">Carrossel</option>
@@ -65,7 +65,7 @@ export default async function NovoPostPage({
         <Field label="Data agendada" name="scheduled_date" type="date" />
 
         <div className="space-y-1">
-          <label htmlFor="media" className="text-sm text-neutral-400">
+          <label htmlFor="media" className="text-sm text-neutral-500">
             Mídia (imagem, várias para carrossel, ou vídeo para reels)
           </label>
           <input
@@ -81,7 +81,7 @@ export default async function NovoPostPage({
 
         <button
           type="submit"
-          className="w-full rounded-md bg-neutral-100 px-4 py-2 font-medium text-neutral-900 hover:bg-neutral-300"
+          className="w-full rounded-md bg-fox-orange px-4 py-2 font-medium text-white hover:bg-fox-orange-dark"
         >
           Criar post
         </button>

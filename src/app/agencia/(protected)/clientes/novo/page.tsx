@@ -41,14 +41,14 @@ export default async function NovoClientePage({
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="logo" className="text-sm text-neutral-400">
+          <label htmlFor="logo" className="text-sm text-neutral-500">
             Logo (opcional)
           </label>
           <input id="logo" name="logo" type="file" accept="image/*" className="w-full text-sm" />
         </div>
         <button
           type="submit"
-          className="w-full rounded-md bg-neutral-100 px-4 py-2 font-medium text-neutral-900 hover:bg-neutral-300"
+          className="w-full rounded-md bg-fox-orange px-4 py-2 font-medium text-white hover:bg-fox-orange-dark"
         >
           Criar cliente
         </button>

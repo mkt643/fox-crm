@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8f4ef;
+  --foreground: #272a16;
 }
 
 @theme inline {
@@ -10,13 +10,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Marca FOX */
+  --color-fox-olive: #5c5f30;
+  --color-fox-olive-dark: #44461f;
+  --color-fox-orange: #ee7840;
+  --color-fox-orange-dark: #d9672f;
+  --color-fox-peach: #f6a970;
+  --color-fox-tan: #f0dac0;
+  --color-fox-cream: #f8f4ef;
 }
 
 body {

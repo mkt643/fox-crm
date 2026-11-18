@@ -9,6 +9,15 @@ const STATUS_OPTIONS = [
   { value: "aprovado", label: "Aprovado" },
 ];
 
+const STATUS_BADGE_STYLES: Record<string, string> = {
+  revisao_interna: "bg-neutral-100 text-neutral-700",
+  com_cliente: "bg-fox-tan text-fox-orange-dark",
+  ajuste_pedido: "bg-amber-100 text-amber-800",
+  aprovado: "bg-green-100 text-green-800",
+};
+
+const STATUS_LABELS = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
+
 export default async function PostDetailPage({
   params,
 }: {
@@ -48,14 +57,30 @@ export default async function PostDetailPage({
     .eq("post_id", postId)
     .order("created_at", { ascending: false });
 
+  const latestClientComment = activity?.find((a) => a.actor_type === "client" && a.comment);
+
   return (
     <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">{clientName}</h1>
-        <p className="text-sm text-neutral-400">
-          {post.type} · status atual: {post.status}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">{clientName}</h1>
+          <p className="text-sm text-neutral-500">{post.type}</p>
+        </div>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_BADGE_STYLES[post.status] ?? "bg-neutral-100 text-neutral-700"}`}
+        >
+          {STATUS_LABELS[post.status] ?? post.status}
+        </span>
       </div>
+
+      {post.status === "ajuste_pedido" && latestClientComment && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-4">
+          <p className="text-xs font-semibold tracking-wide text-amber-700 uppercase">
+            O cliente pediu ajuste
+          </p>
+          <p className="mt-2 text-sm text-neutral-800">“{latestClientComment.comment}”</p>
+        </div>
+      )}
 
       {mediaWithUrls.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -66,7 +91,7 @@ export default async function PostDetailPage({
                 key={item.id}
                 src={item.url}
                 controls
-                className="aspect-square rounded-md bg-neutral-900 object-cover"
+                className="aspect-square rounded-md bg-white object-cover"
               />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
@@ -81,24 +106,24 @@ export default async function PostDetailPage({
         </div>
       )}
 
-      <p className="whitespace-pre-wrap rounded-md border border-neutral-800 bg-neutral-900 p-3 text-sm">
+      <p className="whitespace-pre-wrap rounded-md border border-neutral-200 bg-white p-3 text-sm">
         {post.caption || "Sem legenda."}
       </p>
 
       <form
         action={changePostStatus}
-        className="space-y-3 rounded-md border border-neutral-800 p-4"
+        className="space-y-3 rounded-md border border-neutral-200 bg-white p-4"
       >
         <input type="hidden" name="post_id" value={post.id} />
         <div className="space-y-1">
-          <label htmlFor="new_status" className="text-sm text-neutral-400">
+          <label htmlFor="new_status" className="text-sm text-neutral-500">
             Mudar status
           </label>
           <select
             id="new_status"
             name="new_status"
             defaultValue={post.status}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -108,35 +133,34 @@ export default async function PostDetailPage({
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="comment" className="text-sm text-neutral-400">
+          <label htmlFor="comment" className="text-sm text-neutral-500">
             Comentário (opcional)
           </label>
           <textarea
             id="comment"
             name="comment"
             rows={2}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm"
           />
         </div>
         <button
           type="submit"
-          className="rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-300"
+          className="rounded-md bg-fox-orange px-4 py-2 text-sm font-medium text-white hover:bg-fox-orange-dark"
         >
           Salvar
         </button>
       </form>
 
       <div className="space-y-2">
-        <h2 className="text-sm font-medium text-neutral-400">Histórico</h2>
-        {!activity?.length && (
-          <p className="text-sm text-neutral-500">Sem atividade ainda.</p>
-        )}
+        <h2 className="text-sm font-medium text-neutral-500">Histórico</h2>
+        {!activity?.length && <p className="text-sm text-neutral-500">Sem atividade ainda.</p>}
         <ul className="space-y-2">
           {activity?.map((item) => (
-            <li key={item.id} className="rounded-md border border-neutral-800 p-3 text-sm">
-              <p className="text-neutral-400">
+            <li key={item.id} className="rounded-md border border-neutral-200 bg-white p-3 text-sm">
+              <p className="text-neutral-500">
                 {item.actor_type === "agency" ? "Agência" : "Cliente"} ·{" "}
-                {item.previous_status ?? "—"} → {item.new_status}
+                {STATUS_LABELS[item.previous_status ?? ""] ?? item.previous_status ?? "—"} →{" "}
+                {STATUS_LABELS[item.new_status] ?? item.new_status}
               </p>
               {item.comment && <p className="mt-1">{item.comment}</p>}
             </li>

@@ -22,17 +22,17 @@ export default async function PendenciasClientePage({
 
       <ul className="space-y-3">
         {pendencies?.map((item) => (
-          <li key={item.id} className="rounded-md border border-neutral-800 p-4">
+          <li key={item.id} className="rounded-md border border-neutral-200 p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-medium">
                   {item.title}{" "}
                   {item.status === "resolvida" && (
-                    <span className="text-xs text-green-400">(resolvida)</span>
+                    <span className="text-xs text-green-700">(resolvida)</span>
                   )}
                 </h2>
                 {item.description && (
-                  <p className="mt-1 text-sm text-neutral-400">{item.description}</p>
+                  <p className="mt-1 text-sm text-neutral-500">{item.description}</p>
                 )}
                 {item.due_date && (
                   <p className="mt-1 text-xs text-neutral-500">Prazo: {item.due_date}</p>
@@ -43,7 +43,7 @@ export default async function PendenciasClientePage({
                   <form action={resolvePendency}>
                     <input type="hidden" name="id" value={item.id} />
                     <input type="hidden" name="client_id" value={clientId} />
-                    <button type="submit" className="text-sm text-green-400 hover:text-green-300">
+                    <button type="submit" className="text-sm text-green-700 hover:text-green-700">
                       Resolver
                     </button>
                   </form>
@@ -51,7 +51,7 @@ export default async function PendenciasClientePage({
                 <form action={deletePendency}>
                   <input type="hidden" name="id" value={item.id} />
                   <input type="hidden" name="client_id" value={clientId} />
-                  <button type="submit" className="text-sm text-red-400 hover:text-red-300">
+                  <button type="submit" className="text-sm text-red-600 hover:text-red-700">
                     Excluir
                   </button>
                 </form>
@@ -61,14 +61,14 @@ export default async function PendenciasClientePage({
         ))}
       </ul>
 
-      <form action={addPendency} className="space-y-3 rounded-md border border-neutral-800 p-4">
+      <form action={addPendency} className="space-y-3 rounded-md border border-neutral-200 p-4">
         <input type="hidden" name="client_id" value={clientId} />
         <Field label="Título" name="title" required />
         <TextAreaField label="Descrição" name="description" rows={3} />
         <Field label="Prazo" name="due_date" type="date" />
         <button
           type="submit"
-          className="rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-300"
+          className="rounded-md bg-fox-orange px-4 py-2 text-sm font-medium text-white hover:bg-fox-orange-dark"
         >
           Adicionar pendência
         </button>

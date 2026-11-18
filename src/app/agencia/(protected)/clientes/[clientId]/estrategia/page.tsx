@@ -22,18 +22,18 @@ export default async function EstrategiaClientePage({
 
       <ul className="space-y-3">
         {sections?.map((section) => (
-          <li key={section.id} className="rounded-md border border-neutral-800 p-4">
+          <li key={section.id} className="rounded-md border border-neutral-200 p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-medium">{section.title}</h2>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-400">
+                <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-500">
                   {section.content}
                 </p>
               </div>
               <form action={deleteStrategySection}>
                 <input type="hidden" name="id" value={section.id} />
                 <input type="hidden" name="client_id" value={clientId} />
-                <button type="submit" className="text-sm text-red-400 hover:text-red-300">
+                <button type="submit" className="text-sm text-red-600 hover:text-red-700">
                   Excluir
                 </button>
               </form>
@@ -44,14 +44,14 @@ export default async function EstrategiaClientePage({
 
       <form
         action={addStrategySection}
-        className="space-y-3 rounded-md border border-neutral-800 p-4"
+        className="space-y-3 rounded-md border border-neutral-200 p-4"
       >
         <input type="hidden" name="client_id" value={clientId} />
         <Field label="Título da seção" name="title" required />
         <TextAreaField label="Conteúdo" name="content" rows={4} />
         <button
           type="submit"
-          className="rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-300"
+          className="rounded-md bg-fox-orange px-4 py-2 text-sm font-medium text-white hover:bg-fox-orange-dark"
         >
           Adicionar seção
         </button>

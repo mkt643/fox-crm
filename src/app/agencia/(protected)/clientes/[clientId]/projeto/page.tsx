@@ -28,12 +28,12 @@ export default async function ProjetoClientePage({
 
       <ol className="space-y-3">
         {stages?.map((stage) => (
-          <li key={stage.id} className="rounded-md border border-neutral-800 p-4">
+          <li key={stage.id} className="rounded-md border border-neutral-200 p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-medium">{stage.title}</h2>
                 {stage.description && (
-                  <p className="mt-1 text-sm text-neutral-400">{stage.description}</p>
+                  <p className="mt-1 text-sm text-neutral-500">{stage.description}</p>
                 )}
                 {stage.due_date && (
                   <p className="mt-1 text-xs text-neutral-500">Prazo: {stage.due_date}</p>
@@ -42,7 +42,7 @@ export default async function ProjetoClientePage({
               <form action={deleteProjectStage}>
                 <input type="hidden" name="id" value={stage.id} />
                 <input type="hidden" name="client_id" value={clientId} />
-                <button type="submit" className="text-sm text-red-400 hover:text-red-300">
+                <button type="submit" className="text-sm text-red-600 hover:text-red-700">
                   Excluir
                 </button>
               </form>
@@ -53,7 +53,7 @@ export default async function ProjetoClientePage({
               <select
                 name="status"
                 defaultValue={stage.status}
-                className="rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm"
+                className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm"
               >
                 {STATUS_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -63,7 +63,7 @@ export default async function ProjetoClientePage({
               </select>
               <button
                 type="submit"
-                className="rounded-md border border-neutral-700 px-3 py-1 text-sm hover:bg-neutral-900"
+                className="rounded-md border border-neutral-300 px-3 py-1 text-sm hover:bg-fox-cream"
               >
                 Salvar status
               </button>
@@ -74,7 +74,7 @@ export default async function ProjetoClientePage({
 
       <form
         action={addProjectStage}
-        className="space-y-3 rounded-md border border-neutral-800 p-4"
+        className="space-y-3 rounded-md border border-neutral-200 p-4"
       >
         <input type="hidden" name="client_id" value={clientId} />
         <Field label="Título da etapa" name="title" required />
@@ -82,7 +82,7 @@ export default async function ProjetoClientePage({
         <Field label="Prazo" name="due_date" type="date" />
         <button
           type="submit"
-          className="rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-300"
+          className="rounded-md bg-fox-orange px-4 py-2 text-sm font-medium text-white hover:bg-fox-orange-dark"
         >
           Adicionar etapa
         </button>

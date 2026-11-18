@@ -28,7 +28,7 @@ export async function signInPortal(formData: FormData) {
     redirect("/portal/login?error=sem_acesso");
   }
 
-  redirect("/portal/para-aprovar");
+  redirect("/portal");
 }
 
 export async function signOutPortal() {

@@ -14,22 +14,22 @@ export default async function AgenciaClientesPage() {
         <h1 className="text-xl font-semibold">Clientes</h1>
         <Link
           href="/agencia/clientes/novo"
-          className="rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-300"
+          className="rounded-md bg-fox-orange px-4 py-2 text-sm font-medium text-white hover:bg-fox-orange-dark"
         >
           + Novo cliente
         </Link>
       </div>
 
       {!clients?.length && (
-        <p className="text-sm text-neutral-400">Nenhum cliente cadastrado ainda.</p>
+        <p className="text-sm text-neutral-500">Nenhum cliente cadastrado ainda.</p>
       )}
 
-      <ul className="divide-y divide-neutral-800 rounded-md border border-neutral-800">
+      <ul className="divide-y divide-neutral-800 rounded-md border border-neutral-200">
         {clients?.map((client) => (
           <li key={client.id}>
             <Link
               href={`/agencia/clientes/${client.id}`}
-              className="flex items-center justify-between px-4 py-3 text-sm hover:bg-neutral-900"
+              className="flex items-center justify-between px-4 py-3 text-sm hover:bg-fox-cream"
             >
               <span>{client.name}</span>
               <span className="text-neutral-500">
