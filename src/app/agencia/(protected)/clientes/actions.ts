@@ -14,6 +14,8 @@ export async function createClientAccount(input: {
   password: string;
   primaryColor: string | null;
   secondaryColor: string | null;
+  accentColor: string | null;
+  lightColor: string | null;
 }) {
   const { supabase, member } = await requireAgencyMember();
 
@@ -43,6 +45,8 @@ export async function createClientAccount(input: {
       auth_user_id: authUser.user.id,
       primary_color: input.primaryColor,
       secondary_color: input.secondaryColor,
+      accent_color: input.accentColor,
+      light_color: input.lightColor,
       created_by: member.id,
     })
     .select("id")
@@ -61,4 +65,28 @@ export async function setClientLogoPath(clientId: string, path: string) {
   const { supabase } = await requireAgencyMember();
   await supabase.from("clients").update({ logo_path: path }).eq("id", clientId);
   revalidatePath("/agencia/clientes");
+  revalidatePath(`/agencia/clientes/${clientId}`);
+}
+
+export async function updateClientColors(input: {
+  clientId: string;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  lightColor: string | null;
+}) {
+  const { supabase } = await requireAgencyMember();
+
+  await supabase
+    .from("clients")
+    .update({
+      primary_color: input.primaryColor,
+      secondary_color: input.secondaryColor,
+      accent_color: input.accentColor,
+      light_color: input.lightColor,
+    })
+    .eq("id", input.clientId);
+
+  revalidatePath(`/agencia/clientes/${input.clientId}`);
+  revalidatePath("/portal");
 }

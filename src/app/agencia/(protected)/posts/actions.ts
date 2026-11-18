@@ -6,6 +6,7 @@ import { requireAgencyMember } from "@/lib/auth/require";
 import { notifyClientNewPostForApproval } from "@/lib/notifications";
 
 const VALID_TYPES = ["imagem", "carrossel", "reels"];
+const VALID_STATUSES = ["revisao_interna", "com_cliente", "ajuste_pedido", "aprovado"];
 
 // Cria só a linha do post (sem mídia). O upload dos arquivos é feito direto
 // do navegador para o Supabase Storage pelo NewPostForm (client component),
@@ -16,11 +17,16 @@ export async function createPostRecord(input: {
   type: string;
   caption: string;
   scheduledDate: string | null;
+  status: string;
 }) {
   const { supabase, member } = await requireAgencyMember();
 
-  if (!input.clientId || !VALID_TYPES.includes(input.type)) {
-    throw new Error("Selecione um cliente e um tipo válidos.");
+  if (
+    !input.clientId ||
+    !VALID_TYPES.includes(input.type) ||
+    !VALID_STATUSES.includes(input.status)
+  ) {
+    throw new Error("Selecione um cliente, tipo e status válidos.");
   }
 
   const { data: post, error } = await supabase
@@ -30,13 +36,21 @@ export async function createPostRecord(input: {
       type: input.type,
       caption: input.caption,
       scheduled_date: input.scheduledDate,
+      status: input.status,
       created_by: member.id,
     })
-    .select("id")
+    .select("id, clients(auth_user_id)")
     .single();
 
   if (error || !post) {
     throw new Error("Não foi possível criar o post.");
+  }
+
+  if (input.status === "com_cliente") {
+    const clientInfo = post.clients as unknown as { auth_user_id: string } | null;
+    if (clientInfo?.auth_user_id) {
+      await notifyClientNewPostForApproval(clientInfo.auth_user_id);
+    }
   }
 
   return post.id as string;

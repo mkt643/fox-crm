@@ -6,6 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import { Field, TextAreaField, ErrorBanner } from "@/components/form-field";
 import { createPostRecord, finalizePostCreation } from "../actions";
 
+const STATUS_OPTIONS = [
+  { value: "revisao_interna", label: "Revisão interna" },
+  { value: "com_cliente", label: "Com o cliente" },
+  { value: "ajuste_pedido", label: "Ajuste pedido" },
+  { value: "aprovado", label: "Aprovado" },
+];
+
 export function NewPostForm({ clients }: { clients: { id: string; name: string }[] }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +28,7 @@ export function NewPostForm({ clients }: { clients: { id: string; name: string }
     const type = String(formData.get("type") ?? "");
     const caption = String(formData.get("caption") ?? "");
     const scheduledDate = String(formData.get("scheduled_date") ?? "") || null;
+    const status = String(formData.get("status") ?? "revisao_interna");
     const files = Array.from(formData.getAll("media")).filter(
       (f): f is File => f instanceof File && f.size > 0,
     );
@@ -33,7 +41,7 @@ export function NewPostForm({ clients }: { clients: { id: string; name: string }
     setSubmitting(true);
     try {
       setProgress("Criando post...");
-      const postId = await createPostRecord({ clientId, type, caption, scheduledDate });
+      const postId = await createPostRecord({ clientId, type, caption, scheduledDate, status });
 
       const supabase = createClient();
       for (const [index, file] of files.entries()) {
@@ -104,6 +112,24 @@ export function NewPostForm({ clients }: { clients: { id: string; name: string }
           <option value="imagem">Imagem</option>
           <option value="carrossel">Carrossel</option>
           <option value="reels">Reels</option>
+        </select>
+      </div>
+
+      <div className="space-y-1">
+        <label htmlFor="status" className="text-sm text-neutral-500">
+          Status inicial
+        </label>
+        <select
+          id="status"
+          name="status"
+          defaultValue="revisao_interna"
+          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-fox-orange focus:ring-1 focus:ring-fox-orange"
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 

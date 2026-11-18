@@ -18,6 +18,16 @@ const STATUS_LABELS: Record<string, string> = {
 export default async function PortalHomePage() {
   const { supabase, client } = await requireClient();
 
+  const { data: branding } = await supabase
+    .from("clients")
+    .select("primary_color, secondary_color, accent_color, light_color")
+    .eq("id", client.id)
+    .maybeSingle();
+
+  const primaryColor = branding?.primary_color || "#5c5f30";
+  const accentColor = branding?.accent_color || branding?.secondary_color || "#ee7840";
+  const lightColor = branding?.light_color || "#f8f4ef";
+
   const { data: posts } = await supabase
     .from("posts")
     .select("id, type, caption, scheduled_date, status")
@@ -65,9 +75,12 @@ export default async function PortalHomePage() {
 
   return (
     <div className="max-w-4xl space-y-8">
-      <div>
+      <div
+        className="rounded-lg border-l-4 p-5"
+        style={{ backgroundColor: lightColor, borderLeftColor: primaryColor }}
+      >
         <h1 className="text-2xl font-semibold">Oi, {client.name}!</h1>
-        <p className="text-neutral-500">
+        <p className="text-neutral-600">
           Aqui está o andamento das suas publicações, a estratégia e a marca.
         </p>
       </div>
@@ -85,12 +98,12 @@ export default async function PortalHomePage() {
           {pendingApproval.length > 0 && (
             <Link
               href="/portal/para-aprovar"
-              className="flex items-center justify-between rounded-md border border-neutral-200 bg-white p-4 text-sm hover:border-fox-orange"
+              className="flex items-center justify-between rounded-md border border-neutral-200 bg-white p-4 text-sm transition hover:shadow-sm"
             >
               <span>
                 {pendingApproval.length} post{pendingApproval.length > 1 ? "s" : ""} para aprovar
               </span>
-              <span className="text-fox-orange">›</span>
+              <span style={{ color: accentColor }}>›</span>
             </Link>
           )}
 
@@ -98,10 +111,10 @@ export default async function PortalHomePage() {
             <Link
               key={item.id}
               href="/portal/pendencias"
-              className="flex items-center justify-between rounded-md border border-neutral-200 bg-white p-4 text-sm hover:border-fox-orange"
+              className="flex items-center justify-between rounded-md border border-neutral-200 bg-white p-4 text-sm transition hover:shadow-sm"
             >
               <span>{item.title}</span>
-              <span className="text-fox-orange">›</span>
+              <span style={{ color: accentColor }}>›</span>
             </Link>
           ))}
         </div>
@@ -110,9 +123,10 @@ export default async function PortalHomePage() {
           <h2 className="text-sm font-medium text-neutral-500">Como funciona</h2>
           <Link
             href="/portal/como-funciona"
-            className="block rounded-md border border-neutral-200 bg-white p-4 text-sm hover:border-fox-orange"
+            className="block rounded-md border border-neutral-200 bg-white p-4 text-sm transition hover:shadow-sm"
           >
-            Veja como funciona a aprovação, o que esperar em cada fase e tire suas dúvidas →
+            Veja como funciona a aprovação, o que esperar em cada fase e tire suas dúvidas{" "}
+            <span style={{ color: accentColor }}>→</span>
           </Link>
         </div>
       </div>

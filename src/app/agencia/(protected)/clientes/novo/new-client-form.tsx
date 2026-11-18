@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Field, ErrorBanner } from "@/components/form-field";
+import { ColorPaletteFields } from "@/components/color-palette-fields";
 import { createClientAccount, setClientLogoPath } from "../actions";
 
 export function NewClientForm() {
@@ -21,6 +22,8 @@ export function NewClientForm() {
     const password = String(formData.get("password") ?? "");
     const primaryColor = String(formData.get("primary_color") ?? "") || null;
     const secondaryColor = String(formData.get("secondary_color") ?? "") || null;
+    const accentColor = String(formData.get("accent_color") ?? "") || null;
+    const lightColor = String(formData.get("light_color") ?? "") || null;
     const logo = formData.get("logo") as File | null;
 
     setSubmitting(true);
@@ -31,6 +34,8 @@ export function NewClientForm() {
         password,
         primaryColor,
         secondaryColor,
+        accentColor,
+        lightColor,
       });
 
       if (logo && logo.size > 0) {
@@ -64,14 +69,9 @@ export function NewClientForm() {
         required
         minLength={8}
       />
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Cor primária" name="primary_color" type="color" defaultValue="#171717" />
-        <Field
-          label="Cor secundária"
-          name="secondary_color"
-          type="color"
-          defaultValue="#737373"
-        />
+      <div className="space-y-1">
+        <p className="text-sm text-neutral-500">Paleta de cores (usada no portal do cliente)</p>
+        <ColorPaletteFields />
       </div>
       <div className="space-y-1">
         <label htmlFor="logo" className="text-sm text-neutral-500">

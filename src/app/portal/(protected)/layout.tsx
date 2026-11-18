@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireClient } from "@/lib/auth/require";
 import { PortalNavLink } from "@/components/portal-nav-link";
+import { getContrastColor } from "@/lib/color";
 import { signOutPortal } from "../login/actions";
 
 const NAV_ITEMS = [
@@ -23,7 +24,7 @@ export default async function PortalProtectedLayout({
 
   const { data: branding } = await supabase
     .from("clients")
-    .select("primary_color, logo_path")
+    .select("primary_color, secondary_color, accent_color, light_color, logo_path")
     .eq("id", client.id)
     .maybeSingle();
 
@@ -35,38 +36,56 @@ export default async function PortalProtectedLayout({
     logoUrl = data?.signedUrl;
   }
 
-  const accentColor = branding?.primary_color || "#ee7840";
+  const primaryColor = branding?.primary_color || "#5c5f30";
+  const accentColor = branding?.accent_color || branding?.secondary_color || "#ee7840";
+  const navTextColor = getContrastColor(primaryColor);
 
   return (
     <div className="min-h-screen bg-fox-cream text-neutral-900">
-      <nav className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6 py-4">
-        <div className="flex flex-wrap items-center gap-5">
-          <Link href="/portal" className="flex items-center gap-2">
+      <nav
+        className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 shadow-sm"
+        style={{ backgroundColor: primaryColor }}
+      >
+        <div className="flex flex-wrap items-center gap-6">
+          <Link href="/portal" className="flex items-center gap-3">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={logoUrl}
                 alt={client.name}
-                className="h-8 w-8 rounded bg-white object-contain"
+                className="h-11 w-11 rounded-full border-2 border-white/80 bg-white object-contain p-1"
               />
             ) : (
               <span
-                className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
-                style={{ backgroundColor: accentColor }}
+                className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/80 text-base font-semibold"
+                style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
               >
                 {client.name.slice(0, 1).toUpperCase()}
               </span>
             )}
+            <span className="hidden text-sm font-semibold sm:block" style={{ color: navTextColor }}>
+              {client.name}
+            </span>
           </Link>
-          {NAV_ITEMS.map((item) => (
-            <PortalNavLink key={item.href} href={item.href} accentColor={accentColor}>
-              {item.label}
-            </PortalNavLink>
-          ))}
+          <div className="flex flex-wrap items-center gap-5">
+            {NAV_ITEMS.map((item) => (
+              <PortalNavLink
+                key={item.href}
+                href={item.href}
+                accentColor={accentColor}
+                textColor={navTextColor}
+              >
+                {item.label}
+              </PortalNavLink>
+            ))}
+          </div>
         </div>
         <form action={signOutPortal} className="flex items-center gap-3 text-sm">
-          <span className="text-neutral-500">{client.name}</span>
-          <button type="submit" className="text-neutral-500 hover:text-neutral-900">
+          <button
+            type="submit"
+            className="rounded-md px-3 py-1.5 opacity-80 transition hover:opacity-100"
+            style={{ color: navTextColor, borderColor: navTextColor, borderWidth: 1 }}
+          >
             Sair
           </button>
         </form>

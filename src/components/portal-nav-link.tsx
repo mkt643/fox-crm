@@ -6,10 +6,12 @@ import { usePathname } from "next/navigation";
 export function PortalNavLink({
   href,
   accentColor,
+  textColor,
   children,
 }: {
   href: string;
   accentColor: string;
+  textColor: string;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -18,10 +20,12 @@ export function PortalNavLink({
   return (
     <Link
       href={href}
-      style={active ? { color: accentColor, borderColor: accentColor } : undefined}
-      className={`border-b-2 pb-1 text-sm transition ${
-        active ? "font-medium" : "border-transparent text-neutral-500 hover:text-neutral-900"
-      }`}
+      style={{
+        color: textColor,
+        borderColor: active ? accentColor : "transparent",
+        opacity: active ? 1 : 0.75,
+      }}
+      className="border-b-2 pb-1 text-sm font-medium transition hover:opacity-100"
     >
       {children}
     </Link>

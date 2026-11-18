@@ -39,10 +39,15 @@ export async function requestAdjustment(formData: FormData) {
   const { client } = await requireClient();
   const postId = String(formData.get("post_id") ?? "");
   const comment = String(formData.get("comment") ?? "").trim();
+  const highlightedText = String(formData.get("highlighted_text") ?? "").trim();
 
   if (!comment) {
     redirect("/portal/para-aprovar?error=comentario_obrigatorio");
   }
+
+  const fullComment = highlightedText
+    ? `Trecho destacado na legenda: "${highlightedText}"\n\n${comment}`
+    : comment;
 
   const admin = createAdminClient();
   const { data: post } = await admin
@@ -61,10 +66,10 @@ export async function requestAdjustment(formData: FormData) {
     actor_type: "client",
     previous_status: post.status,
     new_status: "ajuste_pedido",
-    comment,
+    comment: fullComment,
   });
 
-  await notifyAgencyOfClientActivity(post.caption, "ajuste_pedido", comment);
+  await notifyAgencyOfClientActivity(post.caption, "ajuste_pedido", fullComment);
 
   revalidatePath("/portal/para-aprovar");
   redirect("/portal/para-aprovar");
