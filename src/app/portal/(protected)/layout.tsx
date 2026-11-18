@@ -39,58 +39,59 @@ export default async function PortalProtectedLayout({
   const primaryColor = branding?.primary_color || "#5c5f30";
   const accentColor = branding?.accent_color || branding?.secondary_color || "#ee7840";
   const navTextColor = getContrastColor(primaryColor);
+  const accentTextColor = getContrastColor(accentColor);
 
   return (
-    <div className="min-h-screen bg-fox-cream text-neutral-900">
-      <nav
-        className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 shadow-sm"
-        style={{ backgroundColor: primaryColor }}
+    <div className="flex min-h-screen bg-fox-cream text-neutral-900">
+      <aside
+        className="flex w-60 flex-shrink-0 flex-col px-4 py-6"
+        style={{ backgroundColor: primaryColor, color: navTextColor }}
       >
-        <div className="flex flex-wrap items-center gap-6">
-          <Link href="/portal" className="flex items-center gap-3">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoUrl}
-                alt={client.name}
-                className="h-11 w-11 rounded-full border-2 border-white/80 bg-white object-contain p-1"
-              />
-            ) : (
-              <span
-                className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/80 text-base font-semibold"
-                style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
-              >
-                {client.name.slice(0, 1).toUpperCase()}
-              </span>
-            )}
-            <span className="hidden text-sm font-semibold sm:block" style={{ color: navTextColor }}>
-              {client.name}
+        <Link href="/portal" className="mb-8 flex items-center gap-3 px-2">
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt={client.name}
+              className="h-10 w-10 flex-shrink-0 rounded-full border-2 border-white/80 bg-white object-contain p-1"
+            />
+          ) : (
+            <span
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-white/80 text-sm font-semibold"
+              style={{ backgroundColor: accentColor, color: accentTextColor }}
+            >
+              {client.name.slice(0, 1).toUpperCase()}
             </span>
-          </Link>
-          <div className="flex flex-wrap items-center gap-5">
-            {NAV_ITEMS.map((item) => (
-              <PortalNavLink
-                key={item.href}
-                href={item.href}
-                accentColor={accentColor}
-                textColor={navTextColor}
-              >
-                {item.label}
-              </PortalNavLink>
-            ))}
-          </div>
+          )}
+          <span className="truncate text-sm font-semibold">{client.name}</span>
+        </Link>
+
+        <nav className="flex-1 space-y-1">
+          {NAV_ITEMS.map((item) => (
+            <PortalNavLink
+              key={item.href}
+              href={item.href}
+              accentColor={accentColor}
+              accentTextColor={accentTextColor}
+              textColor={navTextColor}
+            >
+              {item.label}
+            </PortalNavLink>
+          ))}
+        </nav>
+
+        <div className="space-y-1 border-t pt-4" style={{ borderColor: `${navTextColor}33` }}>
+          <form action={signOutPortal}>
+            <button
+              type="submit"
+              className="w-full rounded-md px-3 py-1.5 text-left text-sm opacity-80 transition hover:bg-white/10 hover:opacity-100"
+            >
+              Sair
+            </button>
+          </form>
         </div>
-        <form action={signOutPortal} className="flex items-center gap-3 text-sm">
-          <button
-            type="submit"
-            className="rounded-md px-3 py-1.5 opacity-80 transition hover:opacity-100"
-            style={{ color: navTextColor, borderColor: navTextColor, borderWidth: 1 }}
-          >
-            Sair
-          </button>
-        </form>
-      </nav>
-      <div className="p-6">{children}</div>
+      </aside>
+      <main className="flex-1 p-8">{children}</main>
     </div>
   );
 }
