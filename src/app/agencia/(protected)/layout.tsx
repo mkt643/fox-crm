@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: "/agencia/dashboard", label: "Dashboard" },
   { href: "/agencia/clientes", label: "Clientes" },
   { href: "/agencia/posts", label: "Fila de aprovação" },
+  { href: "/agencia/comercial", label: "Comercial" },
   { href: "/agencia/financeiro-interno", label: "Financeiro" },
   { href: "/agencia/como-funciona", label: "Como funciona" },
 ];
