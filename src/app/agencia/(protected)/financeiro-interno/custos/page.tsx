@@ -5,7 +5,7 @@ import {
   formatCentsBRL,
   currentMonth,
   monthLabel,
-  STATUS_LABELS,
+  COST_STATUS_LABELS,
   STATUS_STYLES,
 } from "@/lib/financeiro-interno/calc";
 import { getCostsForMonth } from "@/lib/financeiro-interno/data";
@@ -13,7 +13,7 @@ import {
   createSupplier,
   deleteSupplier,
   deleteCost,
-  markCostPaid,
+  setCostStatus,
   updateFinancialSettings,
 } from "../actions";
 import { AddCostForm } from "./add-cost-form";
@@ -91,31 +91,33 @@ export default async function CustosFornecedoresPage({
                   </td>
                   <td className="px-3 py-2 font-medium text-red-700">-{formatCentsBRL(c.amountCents)}</td>
                   <td className="px-3 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[c.status]}`}>
-                      {STATUS_LABELS[c.status]}
-                    </span>
+                    <form action={setCostStatus} className="flex items-center gap-1">
+                      <input type="hidden" name="id" value={c.id} />
+                      <input type="hidden" name="kind" value={c.kind} />
+                      <input type="hidden" name="month" value={month} />
+                      <select
+                        name="status"
+                        defaultValue={c.status}
+                        className={`rounded-full border-0 px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[c.status]}`}
+                      >
+                        {Object.entries(COST_STATUS_LABELS).map(([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <button type="submit" className="text-xs font-medium text-fox-orange hover:underline">
+                        Salvar
+                      </button>
+                    </form>
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      {c.status !== "pago" && c.status !== "cancelado" && (
-                        <form action={markCostPaid}>
-                          <input type="hidden" name="id" value={c.id} />
-                          <input type="hidden" name="kind" value={c.kind} />
-                          <input type="hidden" name="month" value={month} />
-                          <button type="submit" className="text-xs font-medium text-fox-orange hover:underline">
-                            Marcar pago
-                          </button>
-                        </form>
-                      )}
-                      {c.kind === "pontual" && (
-                        <form action={deleteCost}>
-                          <input type="hidden" name="id" value={c.id} />
-                          <button type="submit" className="text-xs text-red-600 hover:text-red-700">
-                            Excluir
-                          </button>
-                        </form>
-                      )}
-                    </div>
+                    <form action={deleteCost}>
+                      <input type="hidden" name="id" value={c.id} />
+                      <button type="submit" className="text-xs text-red-600 hover:text-red-700">
+                        Excluir
+                      </button>
+                    </form>
                   </td>
                 </tr>
               ))}

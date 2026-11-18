@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/portal/pendencias", label: "Pendências" },
   { href: "/portal/contrato", label: "Contrato" },
   { href: "/portal/financeiro", label: "Financeiro" },
+  { href: "/portal/tutoriais", label: "Tutoriais" },
   { href: "/portal/como-funciona", label: "Como funciona" },
 ];
 

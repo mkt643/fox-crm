@@ -28,6 +28,52 @@ export async function markRevenuePaid(formData: FormData) {
   revalidateAll();
 }
 
+export async function setRevenueStatus(formData: FormData) {
+  const { supabase } = await requireAgencyMember();
+  const id = String(formData.get("id") ?? "");
+  const kind = String(formData.get("kind") ?? "");
+  const month = String(formData.get("month") ?? "");
+  const status = String(formData.get("status") ?? "pendente");
+
+  if (kind === "pontual") {
+    await supabase.from("internal_revenues").update({ status }).eq("id", id);
+  } else {
+    await supabase.from("internal_revenue_receipts").upsert(
+      {
+        revenue_id: id,
+        month,
+        status,
+        paid_at: status === "pago" ? new Date().toISOString() : null,
+      },
+      { onConflict: "revenue_id,month" },
+    );
+  }
+  revalidateAll();
+}
+
+export async function setCostStatus(formData: FormData) {
+  const { supabase } = await requireAgencyMember();
+  const id = String(formData.get("id") ?? "");
+  const kind = String(formData.get("kind") ?? "");
+  const month = String(formData.get("month") ?? "");
+  const status = String(formData.get("status") ?? "pendente");
+
+  if (kind === "pontual") {
+    await supabase.from("internal_costs").update({ status }).eq("id", id);
+  } else {
+    await supabase.from("internal_cost_receipts").upsert(
+      {
+        cost_id: id,
+        month,
+        status,
+        paid_at: status === "pago" ? new Date().toISOString() : null,
+      },
+      { onConflict: "cost_id,month" },
+    );
+  }
+  revalidateAll();
+}
+
 export async function markCostPaid(formData: FormData) {
   const { supabase } = await requireAgencyMember();
   const id = String(formData.get("id") ?? "");

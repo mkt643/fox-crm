@@ -15,7 +15,8 @@ export function UploadDocumentForm({ clientId }: { clientId: string }) {
     e.preventDefault();
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const type = String(formData.get("type") ?? "contrato");
     const label = String(formData.get("label") ?? "").trim();
     const file = formData.get("file") as File | null;
@@ -37,7 +38,7 @@ export function UploadDocumentForm({ clientId }: { clientId: string }) {
 
       await createDocumentRecord({ clientId, type, label, storagePath: path });
       router.refresh();
-      e.currentTarget.reset();
+      form.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível enviar o documento.");
     } finally {

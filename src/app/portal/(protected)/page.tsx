@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireClient } from "@/lib/auth/require";
+import { FaqAccordion } from "@/components/faq-accordion";
 
 const STATUS_COLORS: Record<string, string> = {
   aprovado: "bg-green-500",
@@ -65,12 +66,36 @@ export default async function PortalHomePage() {
 
   const { data: pendencies } = await supabase
     .from("client_pendencies")
-    .select("id, title")
+    .select("id, title, due_date")
     .eq("client_id", client.id)
-    .eq("status", "pendente");
+    .eq("status", "pendente")
+    .order("due_date", { ascending: true, nullsFirst: false });
 
   const pendingApproval = posts?.filter((p) => p.status === "com_cliente") ?? [];
   const hasAnythingPending = pendingApproval.length > 0 || (pendencies?.length ?? 0) > 0;
+
+  const earliestApprovalDate = pendingApproval
+    .map((p) => p.scheduled_date)
+    .filter((d): d is string => !!d)
+    .sort()[0];
+
+  type TodoItem = { key: string; dueDate: string | null; kind: "aprovacao" | "pendencia"; data: unknown };
+  const todoItems: TodoItem[] = [
+    ...(pendingApproval.length
+      ? [{ key: "aprovacao", dueDate: earliestApprovalDate ?? null, kind: "aprovacao" as const, data: null }]
+      : []),
+    ...(pendencies ?? []).map((p) => ({
+      key: p.id,
+      dueDate: p.due_date,
+      kind: "pendencia" as const,
+      data: p,
+    })),
+  ].sort((a, b) => {
+    if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+    if (a.dueDate) return -1;
+    if (b.dueDate) return 1;
+    return 0;
+  });
 
   const now = new Date();
   const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -116,80 +141,97 @@ export default async function PortalHomePage() {
         </p>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
-            Precisa de você
-          </h2>
-          {hasAnythingPending && (
-            <Link
-              href="/portal/para-aprovar"
-              className="text-sm font-medium"
-              style={{ color: accentColor }}
-            >
-              Responder agora ›
-            </Link>
-          )}
+      <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+              Precisa de você
+            </h2>
+            {hasAnythingPending && (
+              <Link
+                href="/portal/para-aprovar"
+                className="text-sm font-medium"
+                style={{ color: accentColor }}
+              >
+                Responder agora ›
+              </Link>
+            )}
+          </div>
+
+          <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+            {!hasAnythingPending && (
+              <p className="p-4 text-sm text-neutral-500">
+                Tudo em dia por aqui — sem pendências no momento.
+              </p>
+            )}
+
+            {todoItems.map((item) => {
+              if (item.kind === "aprovacao") {
+                return (
+                  <Link
+                    key={item.key}
+                    href="/portal/para-aprovar"
+                    className="flex items-center gap-3 p-4 text-sm transition hover:bg-fox-cream"
+                  >
+                    <IconTile color={accentColor}>
+                      <ImageIcon />
+                    </IconTile>
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {pendingApproval.length} post{pendingApproval.length > 1 ? "s" : ""} para
+                        aprovar
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        {item.dueDate ? `Agendado para ${item.dueDate}` : "Sem data definida"}
+                        {pendingApproval.length > 1 ? ` — e mais ${pendingApproval.length - 1}` : ""}
+                      </p>
+                    </div>
+                    <span style={{ color: accentColor }}>›</span>
+                  </Link>
+                );
+              }
+              const pendency = item.data as { id: string; title: string; due_date: string | null };
+              return (
+                <Link
+                  key={item.key}
+                  href="/portal/pendencias"
+                  className="flex items-center gap-3 p-4 text-sm transition hover:bg-fox-cream"
+                >
+                  <IconTile color={accentColor}>
+                    <FlagIcon />
+                  </IconTile>
+                  <div className="flex-1">
+                    <p className="font-medium">{pendency.title}</p>
+                    {pendency.due_date && (
+                      <p className="text-xs text-neutral-500">Prazo {pendency.due_date}</p>
+                    )}
+                  </div>
+                  <span style={{ color: accentColor }}>›</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
-          {!hasAnythingPending && (
-            <p className="p-4 text-sm text-neutral-500">
-              Tudo em dia por aqui — sem pendências no momento.
-            </p>
-          )}
-
-          {pendingApproval.length > 0 && (
-            <Link
-              href="/portal/para-aprovar"
-              className="flex items-center gap-3 p-4 text-sm transition hover:bg-fox-cream"
-            >
-              <IconTile color={accentColor}>
-                <ImageIcon />
-              </IconTile>
-              <div className="flex-1">
-                <p className="font-medium">
-                  {pendingApproval.length} post{pendingApproval.length > 1 ? "s" : ""} para
-                  aprovar
-                </p>
-                <p className="text-xs text-neutral-500">
-                  {pendingApproval[0]?.scheduled_date
-                    ? `Agendado para ${pendingApproval[0].scheduled_date}`
-                    : "Sem data definida"}
-                  {pendingApproval.length > 1 ? ` — e mais ${pendingApproval.length - 1}` : ""}
-                </p>
-              </div>
-              <span style={{ color: accentColor }}>›</span>
-            </Link>
-          )}
-
-          {pendencies?.map((item) => (
-            <Link
-              key={item.id}
-              href="/portal/pendencias"
-              className="flex items-center gap-3 p-4 text-sm transition hover:bg-fox-cream"
-            >
-              <IconTile color={accentColor}>
-                <FlagIcon />
-              </IconTile>
-              <div className="flex-1">
-                <p className="font-medium">{item.title}</p>
-              </div>
-              <span style={{ color: accentColor }}>›</span>
-            </Link>
-          ))}
+        <div className="space-y-3">
+          <h2 className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+            Como funciona
+          </h2>
+          <FaqAccordion accentColor={accentColor} />
         </div>
       </div>
 
       <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-5">
-        <div>
-          <h2 className="text-sm font-semibold capitalize">
-            {now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-          </h2>
-          <p className="text-xs text-neutral-500">
-            {monthPosts.length} post{monthPosts.length !== 1 ? "s" : ""} planejados para o seu
-            perfil.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold capitalize">
+              Linha do tempo — {now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+            </h2>
+            <p className="text-xs text-neutral-500">
+              {monthPosts.length} post{monthPosts.length !== 1 ? "s" : ""} planejados para o seu
+              perfil.
+            </p>
+          </div>
         </div>
         <div className="flex h-2.5 overflow-hidden rounded-full bg-neutral-200">
           {Object.keys(STATUS_COLORS).map((status) => {
@@ -216,6 +258,36 @@ export default async function PortalHomePage() {
             );
           })}
         </p>
+
+        {monthPosts.length > 0 && (
+          <ol className="max-h-72 space-y-1 overflow-y-auto border-t border-neutral-100 pt-3">
+            {[...monthPosts]
+              .sort((a, b) => (a.scheduled_date ?? "9999").localeCompare(b.scheduled_date ?? "9999"))
+              .map((post) => {
+                const isPast = post.scheduled_date ? post.scheduled_date < todayStr : false;
+                const state =
+                  post.status === "aprovado" && isPast
+                    ? "Já publicado"
+                    : post.status === "aprovado"
+                      ? "Aprovado — aguardando a data"
+                      : post.status === "com_cliente"
+                        ? "Falta você aprovar"
+                        : post.status === "ajuste_pedido"
+                          ? "Em ajuste"
+                          : "Em produção pela FOX";
+                return (
+                  <li key={post.id} className="flex items-center gap-3 py-1.5 text-sm">
+                    <span className={`h-2 w-2 flex-shrink-0 rounded-full ${STATUS_COLORS[post.status]}`} />
+                    <span className="w-20 flex-shrink-0 text-xs text-neutral-400">
+                      {post.scheduled_date ?? "sem data"}
+                    </span>
+                    <span className="flex-1 truncate">{post.caption?.slice(0, 50) || "Sem legenda"}</span>
+                    <span className="flex-shrink-0 text-xs text-neutral-500">{state}</span>
+                  </li>
+                );
+              })}
+          </ol>
+        )}
       </div>
 
       {upcomingWithMedia.length > 0 && (

@@ -76,6 +76,20 @@ export const STATUS_LABELS: Record<EntryStatus, string> = {
   cancelado: "Cancelado",
 };
 
+export const REVENUE_STATUS_LABELS: Record<EntryStatus, string> = {
+  pendente: "A enviar",
+  pago: "Pago",
+  atrasado: "Vencido",
+  cancelado: "Cancelado",
+};
+
+export const COST_STATUS_LABELS: Record<EntryStatus, string> = {
+  pendente: "A vencer",
+  pago: "Pago",
+  atrasado: "Em atraso",
+  cancelado: "Cancelado",
+};
+
 export const STATUS_STYLES: Record<EntryStatus, string> = {
   pendente: "bg-neutral-100 text-neutral-700",
   pago: "bg-green-100 text-green-800",

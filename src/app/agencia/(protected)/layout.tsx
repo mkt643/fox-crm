@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/agencia/posts", label: "Fila de aprovação" },
   { href: "/agencia/comercial", label: "Comercial" },
   { href: "/agencia/financeiro-interno", label: "Financeiro" },
+  { href: "/agencia/tutoriais", label: "Tutoriais" },
   { href: "/agencia/como-funciona", label: "Como funciona" },
 ];
 

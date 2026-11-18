@@ -5,11 +5,11 @@ import {
   formatCentsBRL,
   currentMonth,
   monthLabel,
-  STATUS_LABELS,
+  REVENUE_STATUS_LABELS,
   STATUS_STYLES,
 } from "@/lib/financeiro-interno/calc";
 import { getRevenuesForMonth } from "@/lib/financeiro-interno/data";
-import { createBillingClient, toggleBillingClientStatus, deleteRevenue, markRevenuePaid } from "../actions";
+import { createBillingClient, toggleBillingClientStatus, deleteRevenue, setRevenueStatus } from "../actions";
 import { AddRevenueForm } from "./add-revenue-form";
 
 export default async function ReceitasClientesPage({
@@ -63,31 +63,33 @@ export default async function ReceitasClientesPage({
                   </td>
                   <td className="px-3 py-2 font-medium">{formatCentsBRL(r.amountCents)}</td>
                   <td className="px-3 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[r.status]}`}>
-                      {STATUS_LABELS[r.status]}
-                    </span>
+                    <form action={setRevenueStatus} className="flex items-center gap-1">
+                      <input type="hidden" name="id" value={r.id} />
+                      <input type="hidden" name="kind" value={r.kind} />
+                      <input type="hidden" name="month" value={month} />
+                      <select
+                        name="status"
+                        defaultValue={r.status === "atrasado" ? "atrasado" : r.status}
+                        className={`rounded-full border-0 px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[r.status]}`}
+                      >
+                        {Object.entries(REVENUE_STATUS_LABELS).map(([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <button type="submit" className="text-xs font-medium text-fox-orange hover:underline">
+                        Salvar
+                      </button>
+                    </form>
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      {r.status !== "pago" && r.status !== "cancelado" && (
-                        <form action={markRevenuePaid}>
-                          <input type="hidden" name="id" value={r.id} />
-                          <input type="hidden" name="kind" value={r.kind} />
-                          <input type="hidden" name="month" value={month} />
-                          <button type="submit" className="text-xs font-medium text-fox-orange hover:underline">
-                            Marcar pago
-                          </button>
-                        </form>
-                      )}
-                      {r.kind === "pontual" && (
-                        <form action={deleteRevenue}>
-                          <input type="hidden" name="id" value={r.id} />
-                          <button type="submit" className="text-xs text-red-600 hover:text-red-700">
-                            Excluir
-                          </button>
-                        </form>
-                      )}
-                    </div>
+                    <form action={deleteRevenue}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <button type="submit" className="text-xs text-red-600 hover:text-red-700">
+                        Excluir
+                      </button>
+                    </form>
                   </td>
                 </tr>
               ))}

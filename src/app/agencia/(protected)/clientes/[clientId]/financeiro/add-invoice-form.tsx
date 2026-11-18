@@ -15,7 +15,8 @@ export function AddInvoiceForm({ clientId }: { clientId: string }) {
     e.preventDefault();
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const description = String(formData.get("description") ?? "").trim();
     const amount = String(formData.get("amount") ?? "").replace(",", ".");
     const dueDate = String(formData.get("due_date") ?? "") || null;
@@ -64,7 +65,7 @@ export function AddInvoiceForm({ clientId }: { clientId: string }) {
       }
 
       router.refresh();
-      e.currentTarget.reset();
+      form.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível salvar.");
     } finally {
