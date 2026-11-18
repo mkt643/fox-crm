@@ -7,56 +7,43 @@ import { notifyClientNewPostForApproval } from "@/lib/notifications";
 
 const VALID_TYPES = ["imagem", "carrossel", "reels"];
 
-export async function createPost(formData: FormData) {
+// Cria só a linha do post (sem mídia). O upload dos arquivos é feito direto
+// do navegador para o Supabase Storage pelo NewPostForm (client component),
+// porque a Vercel tem um limite fixo de 4.5MB no corpo da requisição de
+// Server Actions — passar a mídia por aqui quebraria em fotos/vídeos reais.
+export async function createPostRecord(input: {
+  clientId: string;
+  type: string;
+  caption: string;
+  scheduledDate: string | null;
+}) {
   const { supabase, member } = await requireAgencyMember();
 
-  const clientId = String(formData.get("client_id") ?? "");
-  const type = String(formData.get("type") ?? "");
-  const caption = String(formData.get("caption") ?? "");
-  const scheduledDate = String(formData.get("scheduled_date") ?? "") || null;
-  const files = formData
-    .getAll("media")
-    .filter((f): f is File => f instanceof File && f.size > 0);
-
-  if (!clientId || !VALID_TYPES.includes(type) || files.length === 0) {
-    redirect("/agencia/posts/novo?error=dados_invalidos");
+  if (!input.clientId || !VALID_TYPES.includes(input.type)) {
+    throw new Error("Selecione um cliente e um tipo válidos.");
   }
 
-  const { data: post, error: postError } = await supabase
+  const { data: post, error } = await supabase
     .from("posts")
     .insert({
-      client_id: clientId,
-      type,
-      caption,
-      scheduled_date: scheduledDate,
+      client_id: input.clientId,
+      type: input.type,
+      caption: input.caption,
+      scheduled_date: input.scheduledDate,
       created_by: member.id,
     })
     .select("id")
     .single();
 
-  if (postError || !post) {
-    redirect("/agencia/posts/novo?error=erro_criar_post");
+  if (error || !post) {
+    throw new Error("Não foi possível criar o post.");
   }
 
-  for (const [index, file] of files.entries()) {
-    const path = `${clientId}/${post.id}/${index}-${file.name}`;
-    const buffer = await file.arrayBuffer();
-    const { error: uploadError } = await supabase.storage
-      .from("post-media")
-      .upload(path, buffer, { contentType: file.type });
+  return post.id as string;
+}
 
-    if (!uploadError) {
-      await supabase.from("post_media").insert({
-        post_id: post.id,
-        storage_path: path,
-        kind: file.type.startsWith("video") ? "video" : "image",
-        position: index,
-      });
-    }
-  }
-
+export async function finalizePostCreation() {
   revalidatePath("/agencia/posts");
-  redirect("/agencia/posts");
 }
 
 export async function changePostStatus(formData: FormData) {
