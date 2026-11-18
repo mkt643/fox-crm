@@ -12,6 +12,8 @@ const NAV_ITEMS = [
   { href: "/portal/marca", label: "Marca" },
   { href: "/portal/projeto", label: "Projeto" },
   { href: "/portal/pendencias", label: "Pendências" },
+  { href: "/portal/contrato", label: "Contrato" },
+  { href: "/portal/financeiro", label: "Financeiro" },
   { href: "/portal/como-funciona", label: "Como funciona" },
 ];
 

@@ -75,6 +75,30 @@ export default async function ClienteDetailPage({
             Pendências
           </Link>
         </li>
+        <li>
+          <Link
+            href={`/agencia/clientes/${client.id}/servicos`}
+            className="block px-4 py-3 text-sm hover:bg-fox-cream"
+          >
+            Serviços (contratados e extras)
+          </Link>
+        </li>
+        <li>
+          <Link
+            href={`/agencia/clientes/${client.id}/contrato`}
+            className="block px-4 py-3 text-sm hover:bg-fox-cream"
+          >
+            Contrato
+          </Link>
+        </li>
+        <li>
+          <Link
+            href={`/agencia/clientes/${client.id}/financeiro`}
+            className="block px-4 py-3 text-sm hover:bg-fox-cream"
+          >
+            Financeiro
+          </Link>
+        </li>
       </ul>
     </div>
   );
