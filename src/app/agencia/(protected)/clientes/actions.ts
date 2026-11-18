@@ -1,44 +1,48 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAgencyMember } from "@/lib/auth/require";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export async function createClientAccount(formData: FormData) {
+// Não recebe o arquivo do logo — a Vercel limita o corpo de uma Server
+// Action a 4.5MB (fixo, não dá pra configurar), então o upload do logo é
+// feito direto do navegador pro Supabase Storage depois que o cliente é
+// criado (ver NewClientForm + setClientLogoPath).
+export async function createClientAccount(input: {
+  name: string;
+  email: string;
+  password: string;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+}) {
   const { supabase, member } = await requireAgencyMember();
 
-  const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  const primaryColor = String(formData.get("primary_color") ?? "") || null;
-  const secondaryColor = String(formData.get("secondary_color") ?? "") || null;
-  const logo = formData.get("logo") as File | null;
-
-  if (!name || !email || password.length < 8) {
-    redirect("/agencia/clientes/novo?error=dados_invalidos");
+  if (!input.name || !input.email || input.password.length < 8) {
+    throw new Error("Preencha nome, e-mail e uma senha com pelo menos 8 caracteres.");
   }
 
   const admin = createAdminClient();
   const { data: authUser, error: authError } = await admin.auth.admin.createUser({
-    email,
-    password,
+    email: input.email,
+    password: input.password,
     email_confirm: true,
   });
 
   if (authError || !authUser.user) {
-    const code =
-      authError?.message === "User already registered" ? "email_em_uso" : "erro_criar_login";
-    redirect(`/agencia/clientes/novo?error=${code}`);
+    throw new Error(
+      authError?.message === "User already registered"
+        ? "Já existe um login com esse e-mail."
+        : "Não foi possível criar o login do cliente.",
+    );
   }
 
   const { data: client, error: clientError } = await supabase
     .from("clients")
     .insert({
-      name,
+      name: input.name,
       auth_user_id: authUser.user.id,
-      primary_color: primaryColor,
-      secondary_color: secondaryColor,
+      primary_color: input.primaryColor,
+      secondary_color: input.secondaryColor,
       created_by: member.id,
     })
     .select("id")
@@ -46,21 +50,15 @@ export async function createClientAccount(formData: FormData) {
 
   if (clientError || !client) {
     await admin.auth.admin.deleteUser(authUser.user.id);
-    redirect("/agencia/clientes/novo?error=erro_criar_cliente");
-  }
-
-  if (logo && logo.size > 0) {
-    const path = `${client.id}/logo-${Date.now()}-${logo.name}`;
-    const buffer = await logo.arrayBuffer();
-    const { error: uploadError } = await supabase.storage
-      .from("brand-assets")
-      .upload(path, buffer, { contentType: logo.type });
-
-    if (!uploadError) {
-      await supabase.from("clients").update({ logo_path: path }).eq("id", client.id);
-    }
+    throw new Error("Login criado, mas houve um erro ao salvar o cliente.");
   }
 
   revalidatePath("/agencia/clientes");
-  redirect("/agencia/clientes");
+  return client.id as string;
+}
+
+export async function setClientLogoPath(clientId: string, path: string) {
+  const { supabase } = await requireAgencyMember();
+  await supabase.from("clients").update({ logo_path: path }).eq("id", clientId);
+  revalidatePath("/agencia/clientes");
 }
