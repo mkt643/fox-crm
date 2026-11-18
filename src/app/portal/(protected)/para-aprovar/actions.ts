@@ -1,14 +1,12 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireClient } from "@/lib/auth/require";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyAgencyOfClientActivity } from "@/lib/notifications";
 
-export async function approvePost(formData: FormData) {
+export async function approvePost(postId: string) {
   const { client } = await requireClient();
-  const postId = String(formData.get("post_id") ?? "");
 
   const admin = createAdminClient();
   const { data: post } = await admin
@@ -18,7 +16,7 @@ export async function approvePost(formData: FormData) {
     .maybeSingle();
 
   if (!post || post.client_id !== client.id || post.status !== "com_cliente") {
-    redirect("/portal/para-aprovar");
+    throw new Error("Não foi possível aprovar este post.");
   }
 
   await admin.from("posts").update({ status: "aprovado" }).eq("id", postId);
@@ -32,45 +30,39 @@ export async function approvePost(formData: FormData) {
   await notifyAgencyOfClientActivity(post.caption, "aprovado", null);
 
   revalidatePath("/portal/para-aprovar");
-  redirect("/portal/para-aprovar");
+  revalidatePath("/portal");
 }
 
-export async function requestAdjustment(formData: FormData) {
+export async function requestAdjustment(input: { postId: string; comment: string }) {
   const { client } = await requireClient();
-  const postId = String(formData.get("post_id") ?? "");
-  const comment = String(formData.get("comment") ?? "").trim();
-  const highlightedText = String(formData.get("highlighted_text") ?? "").trim();
+  const comment = input.comment.trim();
 
   if (!comment) {
-    redirect("/portal/para-aprovar?error=comentario_obrigatorio");
+    throw new Error("Escreva pelo menos um comentário explicando o ajuste.");
   }
-
-  const fullComment = highlightedText
-    ? `Trecho destacado na legenda: "${highlightedText}"\n\n${comment}`
-    : comment;
 
   const admin = createAdminClient();
   const { data: post } = await admin
     .from("posts")
     .select("client_id, status, caption")
-    .eq("id", postId)
+    .eq("id", input.postId)
     .maybeSingle();
 
   if (!post || post.client_id !== client.id || post.status !== "com_cliente") {
-    redirect("/portal/para-aprovar");
+    throw new Error("Não foi possível enviar o pedido de ajuste.");
   }
 
-  await admin.from("posts").update({ status: "ajuste_pedido" }).eq("id", postId);
+  await admin.from("posts").update({ status: "ajuste_pedido" }).eq("id", input.postId);
   await admin.from("post_activity").insert({
-    post_id: postId,
+    post_id: input.postId,
     actor_type: "client",
     previous_status: post.status,
     new_status: "ajuste_pedido",
-    comment: fullComment,
+    comment,
   });
 
-  await notifyAgencyOfClientActivity(post.caption, "ajuste_pedido", fullComment);
+  await notifyAgencyOfClientActivity(post.caption, "ajuste_pedido", comment);
 
   revalidatePath("/portal/para-aprovar");
-  redirect("/portal/para-aprovar");
+  revalidatePath("/portal");
 }

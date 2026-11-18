@@ -1,9 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { approvePost, requestAdjustment } from "./actions";
 
 type Media = { id: string; url?: string; kind: string };
+type Highlight = { id: string; start: number; end: number; comment: string };
 
 export function ApprovalCard({
   postId,
@@ -16,8 +18,12 @@ export function ApprovalCard({
   scheduledDate: string | null;
   media: Media[];
 }) {
+  const router = useRouter();
   const captionRef = useRef<HTMLParagraphElement>(null);
-  const [highlight, setHighlight] = useState<{ start: number; end: number } | null>(null);
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [generalComment, setGeneralComment] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState<"approve" | "adjust" | null>(null);
 
   function handleCaptionMouseUp() {
     const selection = window.getSelection();
@@ -38,19 +44,73 @@ export function ApprovalCard({
     const end = Math.max(anchorOffset, focusOffset);
     if (start === end) return;
 
-    setHighlight({ start, end });
+    setHighlights((prev) =>
+      [...prev, { id: crypto.randomUUID(), start, end, comment: "" }].sort(
+        (a, b) => a.start - b.start,
+      ),
+    );
     selection.removeAllRanges();
   }
 
-  const highlightedText = highlight ? caption.slice(highlight.start, highlight.end) : "";
+  function removeHighlight(id: string) {
+    setHighlights((prev) => prev.filter((h) => h.id !== id));
+  }
 
-  const segments = highlight
-    ? [
-        { text: caption.slice(0, highlight.start), marked: false },
-        { text: caption.slice(highlight.start, highlight.end), marked: true },
-        { text: caption.slice(highlight.end), marked: false },
-      ]
-    : [{ text: caption, marked: false }];
+  function updateHighlightComment(id: string, comment: string) {
+    setHighlights((prev) => prev.map((h) => (h.id === id ? { ...h, comment } : h)));
+  }
+
+  const segments: { text: string; highlightIndex: number | null }[] = [];
+  let cursor = 0;
+  highlights.forEach((h, i) => {
+    if (h.start > cursor) segments.push({ text: caption.slice(cursor, h.start), highlightIndex: null });
+    segments.push({ text: caption.slice(h.start, h.end), highlightIndex: i });
+    cursor = Math.max(cursor, h.end);
+  });
+  if (cursor < caption.length) segments.push({ text: caption.slice(cursor), highlightIndex: null });
+
+  async function handleApprove() {
+    setError(null);
+    setSubmitting("approve");
+    try {
+      await approvePost(postId);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível aprovar.");
+    } finally {
+      setSubmitting(null);
+    }
+  }
+
+  async function handleRequestAdjustment() {
+    setError(null);
+
+    const parts: string[] = [];
+    highlights.forEach((h, i) => {
+      if (h.comment.trim()) {
+        parts.push(`Trecho ${i + 1} — "${caption.slice(h.start, h.end)}": ${h.comment.trim()}`);
+      }
+    });
+    if (generalComment.trim()) {
+      parts.push(generalComment.trim());
+    }
+
+    const fullComment = parts.join("\n\n");
+    if (!fullComment) {
+      setError("Escreva um comentário geral ou em algum trecho destacado.");
+      return;
+    }
+
+    setSubmitting("adjust");
+    try {
+      await requestAdjustment({ postId, comment: fullComment });
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível enviar o ajuste.");
+    } finally {
+      setSubmitting(null);
+    }
+  }
 
   return (
     <article className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
@@ -77,6 +137,10 @@ export function ApprovalCard({
         </div>
       )}
       <div className="space-y-3 p-4">
+        {error && (
+          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        )}
+
         <div className="space-y-1">
           <p
             ref={captionRef}
@@ -84,57 +148,86 @@ export function ApprovalCard({
             className="cursor-text select-text whitespace-pre-wrap text-sm"
           >
             {segments.map((seg, i) =>
-              seg.marked ? (
+              seg.highlightIndex !== null ? (
                 <mark key={i} className="rounded-sm bg-[#faff00] px-0.5">
                   {seg.text}
+                  <sup className="ml-0.5 text-[10px] font-bold">{seg.highlightIndex + 1}</sup>
                 </mark>
               ) : (
                 <span key={i}>{seg.text}</span>
               ),
             )}
           </p>
-          <div className="flex items-center justify-between text-xs text-neutral-400">
-            <span>Selecione um trecho da legenda para pedir ajuste nele</span>
-            {highlight && (
-              <button
-                type="button"
-                onClick={() => setHighlight(null)}
-                className="text-neutral-500 underline hover:text-neutral-900"
-              >
-                remover grifo
-              </button>
-            )}
-          </div>
+          <p className="text-xs text-neutral-400">
+            Selecione quantos trechos quiser na legenda para pedir ajuste neles
+          </p>
         </div>
 
-        {scheduledDate && <p className="text-xs text-neutral-500">Agendado para {scheduledDate}</p>}
-
-        <form className="space-y-2">
-          <input type="hidden" name="post_id" value={postId} />
-          <input type="hidden" name="highlighted_text" value={highlightedText} />
-          <textarea
-            name="comment"
-            rows={2}
-            placeholder="Comentário (obrigatório para pedir ajuste)"
-            className="w-full rounded-md border border-neutral-300 bg-fox-cream px-3 py-2 text-sm"
-          />
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              formAction={approvePost}
-              className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500"
-            >
-              Aprovar
-            </button>
-            <button
-              type="submit"
-              formAction={requestAdjustment}
-              className="flex-1 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-fox-cream"
-            >
-              Pedir ajuste
-            </button>
+        {highlights.length > 0 && (
+          <div className="space-y-2">
+            {highlights.map((h, i) => (
+              <div key={h.id} className="rounded-md border border-neutral-200 bg-fox-cream p-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-medium">
+                    Trecho {i + 1}:{" "}
+                    <mark className="rounded-sm bg-[#faff00] px-0.5">
+                      {caption.slice(h.start, h.end)}
+                    </mark>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => removeHighlight(h.id)}
+                    className="flex-shrink-0 text-xs text-neutral-500 hover:text-neutral-900"
+                  >
+                    remover
+                  </button>
+                </div>
+                <textarea
+                  value={h.comment}
+                  onChange={(e) => updateHighlightComment(h.id, e.target.value)}
+                  rows={2}
+                  placeholder="O que precisa mudar nesse trecho?"
+                  className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm"
+                />
+              </div>
+            ))}
           </div>
-        </form>
+        )}
+
+        {scheduledDate && (
+          <p className="text-xs text-neutral-500">Agendado para {scheduledDate}</p>
+        )}
+
+        <textarea
+          value={generalComment}
+          onChange={(e) => setGeneralComment(e.target.value)}
+          rows={2}
+          placeholder={
+            highlights.length > 0
+              ? "Comentário geral (opcional)"
+              : "Comentário (obrigatório para pedir ajuste)"
+          }
+          className="w-full rounded-md border border-neutral-300 bg-fox-cream px-3 py-2 text-sm"
+        />
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleApprove}
+            disabled={submitting !== null}
+            className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-60"
+          >
+            {submitting === "approve" ? "Aprovando..." : "Aprovar"}
+          </button>
+          <button
+            type="button"
+            onClick={handleRequestAdjustment}
+            disabled={submitting !== null}
+            className="flex-1 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-fox-cream disabled:opacity-60"
+          >
+            {submitting === "adjust" ? "Enviando..." : "Pedir ajuste"}
+          </button>
+        </div>
       </div>
     </article>
   );

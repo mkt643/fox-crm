@@ -1,12 +1,7 @@
 import { requireClient } from "@/lib/auth/require";
 import { ApprovalCard } from "./approval-card";
 
-export default async function ParaAprovarPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const { error } = await searchParams;
+export default async function ParaAprovarPage() {
   const { supabase, client } = await requireClient();
 
   const { data: posts } = await supabase
@@ -40,11 +35,6 @@ export default async function ParaAprovarPage({
   return (
     <div className="mx-auto max-w-md space-y-8">
       <h1 className="text-xl font-semibold">Para aprovar</h1>
-      {error === "comentario_obrigatorio" && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          Escreva um comentário explicando o ajuste antes de enviar.
-        </p>
-      )}
 
       {!postsWithMedia.length && (
         <p className="text-sm text-neutral-500">
