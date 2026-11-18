@@ -33,12 +33,26 @@ export async function approvePost(postId: string) {
   revalidatePath("/portal");
 }
 
-export async function requestAdjustment(input: { postId: string; comment: string }) {
+export async function requestAdjustment(input: {
+  postId: string;
+  generalComment: string;
+  highlights: { start: number; end: number; text: string; comment: string }[];
+}) {
   const { client } = await requireClient();
-  const comment = input.comment.trim();
 
-  if (!comment) {
-    throw new Error("Escreva pelo menos um comentário explicando o ajuste.");
+  const meaningfulHighlights = input.highlights.filter((h) => h.comment.trim());
+
+  const parts: string[] = [];
+  meaningfulHighlights.forEach((h, i) => {
+    parts.push(`Trecho ${i + 1} — "${h.text}": ${h.comment.trim()}`);
+  });
+  if (input.generalComment.trim()) {
+    parts.push(input.generalComment.trim());
+  }
+  const fullComment = parts.join("\n\n");
+
+  if (!fullComment) {
+    throw new Error("Escreva um comentário geral ou em algum trecho destacado.");
   }
 
   const admin = createAdminClient();
@@ -58,10 +72,11 @@ export async function requestAdjustment(input: { postId: string; comment: string
     actor_type: "client",
     previous_status: post.status,
     new_status: "ajuste_pedido",
-    comment,
+    comment: fullComment,
+    highlighted_ranges: meaningfulHighlights,
   });
 
-  await notifyAgencyOfClientActivity(post.caption, "ajuste_pedido", comment);
+  await notifyAgencyOfClientActivity(post.caption, "ajuste_pedido", fullComment);
 
   revalidatePath("/portal/para-aprovar");
   revalidatePath("/portal");

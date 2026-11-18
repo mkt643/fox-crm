@@ -7,13 +7,32 @@ import { approvePost, requestAdjustment } from "./actions";
 type Media = { id: string; url?: string; kind: string };
 type Highlight = { id: string; start: number; end: number; comment: string };
 
+function CheckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
 export function ApprovalCard({
   postId,
+  type,
   caption,
   scheduledDate,
   media,
 }: {
   postId: string;
+  type: string;
   caption: string;
   scheduledDate: string | null;
   media: Media[];
@@ -84,26 +103,18 @@ export function ApprovalCard({
 
   async function handleRequestAdjustment() {
     setError(null);
-
-    const parts: string[] = [];
-    highlights.forEach((h, i) => {
-      if (h.comment.trim()) {
-        parts.push(`Trecho ${i + 1} — "${caption.slice(h.start, h.end)}": ${h.comment.trim()}`);
-      }
-    });
-    if (generalComment.trim()) {
-      parts.push(generalComment.trim());
-    }
-
-    const fullComment = parts.join("\n\n");
-    if (!fullComment) {
-      setError("Escreva um comentário geral ou em algum trecho destacado.");
-      return;
-    }
-
     setSubmitting("adjust");
     try {
-      await requestAdjustment({ postId, comment: fullComment });
+      await requestAdjustment({
+        postId,
+        generalComment,
+        highlights: highlights.map((h) => ({
+          start: h.start,
+          end: h.end,
+          text: caption.slice(h.start, h.end),
+          comment: h.comment,
+        })),
+      });
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível enviar o ajuste.");
@@ -112,19 +123,26 @@ export function ApprovalCard({
     }
   }
 
+  const phoneAspect = type === "reels" ? "aspect-[9/16]" : "aspect-[4/5]";
+
   return (
-    <article className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
-      <div className="aspect-[4/5] bg-black">
-        {media[0]?.kind === "video" ? (
-          // eslint-disable-next-line jsx-a11y/media-has-caption
-          <video src={media[0].url} controls className="h-full w-full object-cover" />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={media[0]?.url} alt="" className="h-full w-full object-cover" />
-        )}
+    <article className="space-y-3">
+      {/* Mockup estilo iPhone */}
+      <div className="mx-auto w-full max-w-[280px] rounded-[2.2rem] border-[6px] border-neutral-900 bg-neutral-900 shadow-lg">
+        <div className={`relative overflow-hidden rounded-[1.7rem] bg-black ${phoneAspect}`}>
+          <div className="absolute top-2 left-1/2 z-10 h-1.5 w-16 -translate-x-1/2 rounded-full bg-neutral-800" />
+          {media[0]?.kind === "video" ? (
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            <video src={media[0].url} controls className="h-full w-full object-cover" />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={media[0]?.url} alt="" className="h-full w-full object-cover" />
+          )}
+        </div>
       </div>
+
       {media.length > 1 && (
-        <div className="flex gap-1 overflow-x-auto p-2">
+        <div className="flex justify-center gap-1 overflow-x-auto">
           {media.map((m) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -136,16 +154,18 @@ export function ApprovalCard({
           ))}
         </div>
       )}
-      <div className="space-y-3 p-4">
-        {error && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-        )}
+
+      <div className="mx-auto max-w-md space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
+        {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
         <div className="space-y-1">
+          <p className="text-xs font-semibold tracking-wide text-neutral-400 uppercase">
+            Legenda
+          </p>
           <p
             ref={captionRef}
             onMouseUp={handleCaptionMouseUp}
-            className="cursor-text select-text whitespace-pre-wrap text-sm"
+            className="cursor-text rounded-md border border-neutral-100 bg-fox-cream/60 p-3 text-sm leading-relaxed whitespace-pre-wrap select-text"
           >
             {segments.map((seg, i) =>
               seg.highlightIndex !== null ? (
@@ -159,7 +179,7 @@ export function ApprovalCard({
             )}
           </p>
           <p className="text-xs text-neutral-400">
-            Selecione quantos trechos quiser na legenda para pedir ajuste neles
+            Selecione quantos trechos quiser para pedir ajuste neles
           </p>
         </div>
 
@@ -194,9 +214,7 @@ export function ApprovalCard({
           </div>
         )}
 
-        {scheduledDate && (
-          <p className="text-xs text-neutral-500">Agendado para {scheduledDate}</p>
-        )}
+        {scheduledDate && <p className="text-xs text-neutral-500">Agendado para {scheduledDate}</p>}
 
         <textarea
           value={generalComment}
@@ -215,16 +233,18 @@ export function ApprovalCard({
             type="button"
             onClick={handleApprove}
             disabled={submitting !== null}
-            className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-60"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-60"
           >
+            <CheckIcon />
             {submitting === "approve" ? "Aprovando..." : "Aprovar"}
           </button>
           <button
             type="button"
             onClick={handleRequestAdjustment}
             disabled={submitting !== null}
-            className="flex-1 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-fox-cream disabled:opacity-60"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-fox-cream disabled:opacity-60"
           >
+            <EditIcon />
             {submitting === "adjust" ? "Enviando..." : "Pedir ajuste"}
           </button>
         </div>

@@ -46,6 +46,7 @@ export default async function ParaAprovarPage() {
         <ApprovalCard
           key={post.id}
           postId={post.id}
+          type={post.type}
           caption={post.caption}
           scheduledDate={post.scheduled_date}
           media={post.media}

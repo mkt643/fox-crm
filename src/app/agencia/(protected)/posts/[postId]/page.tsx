@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireAgencyMember } from "@/lib/auth/require";
-import { changePostStatus } from "../actions";
+import { changePostStatus, updateCaption } from "../actions";
 
 const STATUS_OPTIONS = [
   { value: "revisao_interna", label: "Revisão interna" },
@@ -17,6 +17,8 @@ const STATUS_BADGE_STYLES: Record<string, string> = {
 };
 
 const STATUS_LABELS = Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]));
+
+type Highlight = { start: number; end: number; text: string; comment: string };
 
 export default async function PostDetailPage({
   params,
@@ -53,11 +55,28 @@ export default async function PostDetailPage({
 
   const { data: activity } = await supabase
     .from("post_activity")
-    .select("id, actor_type, previous_status, new_status, comment, created_at")
+    .select("id, actor_type, previous_status, new_status, comment, highlighted_ranges, created_at")
     .eq("post_id", postId)
     .order("created_at", { ascending: false });
 
   const latestClientComment = activity?.find((a) => a.actor_type === "client" && a.comment);
+
+  const latestHighlightEntry = activity?.find(
+    (a) => a.actor_type === "client" && (a.highlighted_ranges as Highlight[])?.length > 0,
+  );
+  const highlights = (latestHighlightEntry?.highlighted_ranges as Highlight[] | null) ?? [];
+
+  const sortedHighlights = [...highlights].sort((a, b) => a.start - b.start);
+  const segments: { text: string; highlightIndex: number | null }[] = [];
+  let cursor = 0;
+  sortedHighlights.forEach((h, i) => {
+    if (h.start > cursor) segments.push({ text: post.caption.slice(cursor, h.start), highlightIndex: null });
+    segments.push({ text: post.caption.slice(h.start, h.end), highlightIndex: i });
+    cursor = Math.max(cursor, h.end);
+  });
+  if (cursor < post.caption.length) {
+    segments.push({ text: post.caption.slice(cursor), highlightIndex: null });
+  }
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -106,9 +125,55 @@ export default async function PostDetailPage({
         </div>
       )}
 
-      <p className="whitespace-pre-wrap rounded-md border border-neutral-200 bg-white p-3 text-sm">
-        {post.caption || "Sem legenda."}
-      </p>
+      {sortedHighlights.length > 0 && (
+        <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-4">
+          <p className="text-xs font-semibold tracking-wide text-amber-700 uppercase">
+            Trechos que o cliente destacou
+          </p>
+          <p className="whitespace-pre-wrap text-sm">
+            {segments.map((seg, i) =>
+              seg.highlightIndex !== null ? (
+                <mark key={i} className="rounded-sm bg-[#faff00] px-0.5">
+                  {seg.text}
+                  <sup className="ml-0.5 text-[10px] font-bold">{seg.highlightIndex + 1}</sup>
+                </mark>
+              ) : (
+                <span key={i}>{seg.text}</span>
+              ),
+            )}
+          </p>
+          <ul className="space-y-1">
+            {sortedHighlights.map((h, i) => (
+              <li key={i} className="text-sm">
+                <span className="font-medium">Trecho {i + 1}:</span> {h.comment}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <form
+        action={updateCaption}
+        className="space-y-2 rounded-md border border-neutral-200 bg-white p-4"
+      >
+        <input type="hidden" name="post_id" value={post.id} />
+        <label htmlFor="caption" className="text-sm text-neutral-500">
+          Legenda (editável)
+        </label>
+        <textarea
+          id="caption"
+          name="caption"
+          rows={4}
+          defaultValue={post.caption}
+          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-fox-orange focus:ring-1 focus:ring-fox-orange"
+        />
+        <button
+          type="submit"
+          className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-fox-cream"
+        >
+          Salvar legenda
+        </button>
+      </form>
 
       <form
         action={changePostStatus}

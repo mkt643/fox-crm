@@ -60,6 +60,18 @@ export async function finalizePostCreation() {
   revalidatePath("/agencia/posts");
 }
 
+export async function updateCaption(formData: FormData) {
+  const { supabase } = await requireAgencyMember();
+
+  const postId = String(formData.get("post_id") ?? "");
+  const caption = String(formData.get("caption") ?? "");
+
+  await supabase.from("posts").update({ caption }).eq("id", postId);
+
+  revalidatePath(`/agencia/posts/${postId}`);
+  redirect(`/agencia/posts/${postId}`);
+}
+
 export async function changePostStatus(formData: FormData) {
   const { supabase, member } = await requireAgencyMember();
 

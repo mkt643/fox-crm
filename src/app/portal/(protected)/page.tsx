@@ -15,6 +15,36 @@ const STATUS_LABELS: Record<string, string> = {
   revisao_interna: "programado",
 };
 
+function IconTile({ color, children }: { color: string; children: React.ReactNode }) {
+  return (
+    <span
+      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md"
+      style={{ backgroundColor: `${color}22`, color }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function ImageIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <path d="M21 15l-5-5L5 21" />
+    </svg>
+  );
+}
+
+function FlagIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+      <line x1="4" y1="22" x2="4" y2="3" />
+    </svg>
+  );
+}
+
 export default async function PortalHomePage() {
   const { supabase, client } = await requireClient();
 
@@ -40,6 +70,7 @@ export default async function PortalHomePage() {
     .eq("status", "pendente");
 
   const pendingApproval = posts?.filter((p) => p.status === "com_cliente") ?? [];
+  const hasAnythingPending = pendingApproval.length > 0 || (pendencies?.length ?? 0) > 0;
 
   const now = new Date();
   const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -74,23 +105,36 @@ export default async function PortalHomePage() {
   );
 
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="max-w-4xl space-y-6">
       <div
         className="rounded-lg border-l-4 p-5"
         style={{ backgroundColor: lightColor, borderLeftColor: primaryColor }}
       >
         <h1 className="text-2xl font-semibold">Oi, {client.name}!</h1>
         <p className="text-neutral-600">
-          Aqui está o andamento das suas publicações, a estratégia e a marca.
+          Acompanhe aqui a estratégia, a marca e o andamento do seu projeto.
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-neutral-500">Novidades para você</h2>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+            Precisa de você
+          </h2>
+          {hasAnythingPending && (
+            <Link
+              href="/portal/para-aprovar"
+              className="text-sm font-medium"
+              style={{ color: accentColor }}
+            >
+              Responder agora ›
+            </Link>
+          )}
+        </div>
 
-          {!pendingApproval.length && !pendencies?.length && (
-            <p className="rounded-md border border-neutral-200 bg-white p-4 text-sm text-neutral-500">
+        <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+          {!hasAnythingPending && (
+            <p className="p-4 text-sm text-neutral-500">
               Tudo em dia por aqui — sem pendências no momento.
             </p>
           )}
@@ -98,11 +142,23 @@ export default async function PortalHomePage() {
           {pendingApproval.length > 0 && (
             <Link
               href="/portal/para-aprovar"
-              className="flex items-center justify-between rounded-md border border-neutral-200 bg-white p-4 text-sm transition hover:shadow-sm"
+              className="flex items-center gap-3 p-4 text-sm transition hover:bg-fox-cream"
             >
-              <span>
-                {pendingApproval.length} post{pendingApproval.length > 1 ? "s" : ""} para aprovar
-              </span>
+              <IconTile color={accentColor}>
+                <ImageIcon />
+              </IconTile>
+              <div className="flex-1">
+                <p className="font-medium">
+                  {pendingApproval.length} post{pendingApproval.length > 1 ? "s" : ""} para
+                  aprovar
+                </p>
+                <p className="text-xs text-neutral-500">
+                  {pendingApproval[0]?.scheduled_date
+                    ? `Agendado para ${pendingApproval[0].scheduled_date}`
+                    : "Sem data definida"}
+                  {pendingApproval.length > 1 ? ` — e mais ${pendingApproval.length - 1}` : ""}
+                </p>
+              </div>
               <span style={{ color: accentColor }}>›</span>
             </Link>
           )}
@@ -111,31 +167,31 @@ export default async function PortalHomePage() {
             <Link
               key={item.id}
               href="/portal/pendencias"
-              className="flex items-center justify-between rounded-md border border-neutral-200 bg-white p-4 text-sm transition hover:shadow-sm"
+              className="flex items-center gap-3 p-4 text-sm transition hover:bg-fox-cream"
             >
-              <span>{item.title}</span>
+              <IconTile color={accentColor}>
+                <FlagIcon />
+              </IconTile>
+              <div className="flex-1">
+                <p className="font-medium">{item.title}</p>
+              </div>
               <span style={{ color: accentColor }}>›</span>
             </Link>
           ))}
         </div>
-
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-neutral-500">Como funciona</h2>
-          <Link
-            href="/portal/como-funciona"
-            className="block rounded-md border border-neutral-200 bg-white p-4 text-sm transition hover:shadow-sm"
-          >
-            Veja como funciona a aprovação, o que esperar em cada fase e tire suas dúvidas{" "}
-            <span style={{ color: accentColor }}>→</span>
-          </Link>
-        </div>
       </div>
 
-      <div className="space-y-2">
-        <h2 className="text-sm font-medium text-neutral-500">
-          {now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-        </h2>
-        <div className="flex h-3 overflow-hidden rounded-full bg-neutral-200">
+      <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-5">
+        <div>
+          <h2 className="text-sm font-semibold capitalize">
+            {now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+          </h2>
+          <p className="text-xs text-neutral-500">
+            {monthPosts.length} post{monthPosts.length !== 1 ? "s" : ""} planejados para o seu
+            perfil.
+          </p>
+        </div>
+        <div className="flex h-2.5 overflow-hidden rounded-full bg-neutral-200">
           {Object.keys(STATUS_COLORS).map((status) => {
             const count = monthPosts.filter((p) => p.status === status).length;
             if (!count) return null;
