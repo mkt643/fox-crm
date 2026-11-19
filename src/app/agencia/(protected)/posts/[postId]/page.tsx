@@ -97,7 +97,9 @@ export default async function PostDetailPage({
           <p className="text-xs font-semibold tracking-wide text-amber-700 uppercase">
             O cliente pediu ajuste
           </p>
-          <p className="mt-2 text-sm text-neutral-800">“{latestClientComment.comment}”</p>
+          <p className="mt-2 text-sm whitespace-pre-wrap text-neutral-800">
+            "{latestClientComment.comment}"
+          </p>
         </div>
       )}
 
@@ -163,9 +165,9 @@ export default async function PostDetailPage({
         <textarea
           id="caption"
           name="caption"
-          rows={4}
+          rows={14}
           defaultValue={post.caption}
-          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-fox-orange focus:ring-1 focus:ring-fox-orange"
+          className="w-full resize-y rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-fox-orange focus:ring-1 focus:ring-fox-orange"
         />
         <button
           type="submit"
