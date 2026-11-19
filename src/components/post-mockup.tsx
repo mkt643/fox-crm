@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 type Media = { id: string; url?: string; kind: string };
 
 function HeartIcon() {
@@ -33,6 +37,22 @@ function BookmarkIcon() {
   );
 }
 
+function ChevronLeft() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ChevronRight() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
 export function PostMockup({
   type,
   caption,
@@ -50,6 +70,9 @@ export function PostMockup({
   logoUrl?: string;
   accentColor: string;
 }) {
+  const [index, setIndex] = useState(0);
+  const current = media[Math.min(index, Math.max(media.length - 1, 0))];
+
   const phoneAspect = type === "reels" ? "aspect-[9/16]" : "aspect-[4/5]";
   const previewCaption = caption.length > 70 ? `${caption.slice(0, 70)}...` : caption;
   const dateLabel = scheduledDate
@@ -82,17 +105,50 @@ export function PostMockup({
           </div>
 
           <div className={`relative overflow-hidden bg-black ${phoneAspect}`}>
-            {media[0]?.kind === "video" ? (
+            {current?.kind === "video" ? (
               // eslint-disable-next-line jsx-a11y/media-has-caption
-              <video src={media[0].url} controls className="h-full w-full object-cover" />
+              <video src={current.url} controls className="h-full w-full object-cover" />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={media[0]?.url} alt="" className="h-full w-full object-cover" />
+              <img src={current?.url} alt="" className="h-full w-full object-cover" />
             )}
+
             {media.length > 1 && (
-              <span className="absolute top-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
-                1/{media.length}
-              </span>
+              <>
+                <span className="absolute top-2 right-2 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-medium text-white/90">
+                  {index + 1}/{media.length}
+                </span>
+
+                {index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIndex((i) => Math.max(i - 1, 0))}
+                    aria-label="Imagem anterior"
+                    className="absolute top-1/2 left-1.5 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/30 text-white backdrop-blur-sm transition hover:bg-white/50"
+                  >
+                    <ChevronLeft />
+                  </button>
+                )}
+                {index < media.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setIndex((i) => Math.min(i + 1, media.length - 1))}
+                    aria-label="Próxima imagem"
+                    className="absolute top-1/2 right-1.5 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/30 text-white backdrop-blur-sm transition hover:bg-white/50"
+                  >
+                    <ChevronRight />
+                  </button>
+                )}
+
+                <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1">
+                  {media.map((m, i) => (
+                    <span
+                      key={m.id}
+                      className={`h-1.5 w-1.5 rounded-full ${i === index ? "bg-white" : "bg-white/40"}`}
+                    />
+                  ))}
+                </div>
+              </>
             )}
           </div>
 
@@ -113,20 +169,6 @@ export function PostMockup({
           </div>
         </div>
       </div>
-
-      {media.length > 1 && (
-        <div className="flex justify-center gap-1 overflow-x-auto">
-          {media.map((m) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={m.id}
-              src={m.url}
-              alt=""
-              className="h-14 w-14 flex-shrink-0 rounded object-cover opacity-70"
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
