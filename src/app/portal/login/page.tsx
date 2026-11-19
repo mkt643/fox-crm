@@ -26,7 +26,7 @@ export default async function PortalLoginPage({
       </div>
       <div className="flex w-full items-center justify-center bg-fox-cream p-8 md:w-1/2">
         <form action={signInPortal} className="w-full max-w-sm space-y-4">
-          <h1 className="text-xl font-semibold text-neutral-900">Portal do cliente</h1>
+          <h1 className="font-serif text-xl font-semibold text-neutral-900">Portal do cliente</h1>
           {error && <ErrorBanner message={ERROR_MESSAGES[error] ?? "Não foi possível entrar."} />}
           <Field label="E-mail" name="email" type="email" required />
           <Field label="Senha" name="password" type="password" required />

@@ -61,7 +61,7 @@ export default async function ProjetoPage() {
   return (
     <div className="max-w-5xl space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Seu projeto</h1>
+        <h1 className="font-serif text-xl font-semibold">Seu projeto</h1>
         <p className="text-sm text-neutral-500">
           Onde estamos, o que você contratou e o que já aconteceu.
         </p>

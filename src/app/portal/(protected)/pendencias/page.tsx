@@ -10,7 +10,7 @@ export default async function PendenciasPage() {
 
   return (
     <div className="max-w-2xl space-y-4">
-      <h1 className="text-xl font-semibold">Pendências</h1>
+      <h1 className="font-serif text-xl font-semibold">Pendências</h1>
       {!pendencies?.length && (
         <p className="text-sm text-neutral-500">Nenhuma pendência no momento.</p>
       )}

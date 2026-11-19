@@ -135,7 +135,7 @@ export default async function PortalHomePage() {
         className="rounded-lg border-l-4 p-5"
         style={{ backgroundColor: lightColor, borderLeftColor: primaryColor }}
       >
-        <h1 className="text-2xl font-semibold">Oi, {client.name}!</h1>
+        <h1 className="font-serif text-2xl font-semibold">Oi, {client.name}!</h1>
         <p className="text-neutral-600">
           Acompanhe aqui a estratégia, a marca e o andamento do seu projeto.
         </p>

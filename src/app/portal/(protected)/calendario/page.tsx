@@ -174,7 +174,7 @@ export default async function CalendarioPage({
   return (
     <div className="max-w-3xl space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold capitalize">{label}</h1>
+        <h1 className="font-serif text-xl font-semibold capitalize">{label}</h1>
         <div className="flex gap-2 text-sm">
           <Link
             href={qs({ month: prevMonth })}

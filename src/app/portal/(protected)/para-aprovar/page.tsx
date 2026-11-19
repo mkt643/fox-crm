@@ -50,7 +50,7 @@ export default async function ParaAprovarPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div>
-        <h1 className="text-xl font-semibold">Para aprovar</h1>
+        <h1 className="font-serif text-xl font-semibold">Para aprovar</h1>
         {postsWithMedia.length > 0 && (
           <p className="text-sm text-neutral-500">
             {postsWithMedia.length} {postsWithMedia.length > 1 ? "itens esperam" : "item espera"} por

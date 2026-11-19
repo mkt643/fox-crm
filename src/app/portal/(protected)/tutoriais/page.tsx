@@ -19,7 +19,7 @@ export default async function PortalTutoriaisPage() {
   return (
     <div className="max-w-2xl space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Tutoriais</h1>
+        <h1 className="font-serif text-xl font-semibold">Tutoriais</h1>
         <p className="text-sm text-neutral-500">Vídeos e materiais para te ajudar por aqui.</p>
       </div>
 

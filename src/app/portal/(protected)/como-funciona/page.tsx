@@ -9,7 +9,7 @@ export default async function ComoFuncionaPage() {
 
   return (
     <div className="max-w-2xl space-y-4">
-      <h1 className="text-xl font-semibold">Como funciona</h1>
+      <h1 className="font-serif text-xl font-semibold">Como funciona</h1>
       <p className="text-sm text-neutral-500">Para consultar quando quiser.</p>
 
       {!items?.length && (

@@ -80,7 +80,7 @@ export default async function FinanceiroPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <h1 className="text-xl font-semibold">Financeiro</h1>
+      <h1 className="font-serif text-xl font-semibold">Financeiro</h1>
 
       <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-4">
         <h2 className="text-sm font-semibold">

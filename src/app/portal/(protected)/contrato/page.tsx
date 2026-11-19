@@ -26,7 +26,7 @@ export default async function ContratoPage() {
 
   return (
     <div className="max-w-2xl space-y-4">
-      <h1 className="text-xl font-semibold">Contrato</h1>
+      <h1 className="font-serif text-xl font-semibold">Contrato</h1>
       <p className="text-sm text-neutral-500">Seu contrato e proposta comercial.</p>
 
       {!documentsWithUrls.length && (
