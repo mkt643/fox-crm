@@ -13,10 +13,12 @@ export default async function ProjetoPage() {
 
   const { data: branding } = await supabase
     .from("clients")
-    .select("primary_color, accent_color, secondary_color")
+    .select("primary_color, accent_color, secondary_color, light_color")
     .eq("id", client.id)
     .maybeSingle();
   const accentColor = branding?.accent_color || branding?.secondary_color || "#ee7840";
+  const primaryColor = branding?.primary_color || "#262626";
+  const lightColor = branding?.light_color || "#f8f4ef";
 
   const { data: stages } = await supabase
     .from("project_stages")
@@ -81,8 +83,8 @@ export default async function ProjetoPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
-          <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
-            <h2 className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+          <div className="space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
+            <h2 className="text-xs font-semibold tracking-wide uppercase" style={{ color: primaryColor }}>
               Trilha do projeto
             </h2>
             {!stages?.length ? (
@@ -123,48 +125,74 @@ export default async function ProjetoPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-4">
-              <h2 className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+            <div className="space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
+              <h2
+                className="text-xs font-semibold tracking-wide uppercase"
+                style={{ color: primaryColor }}
+              >
                 O que você contratou
               </h2>
               {!contracted.length && (
                 <p className="text-sm text-neutral-500">Nenhum serviço cadastrado ainda.</p>
               )}
-              <ul className="space-y-1.5 text-sm">
+              <div className="space-y-2">
                 {contracted.map((s) => (
-                  <li key={s.id} className="flex items-center gap-2">
-                    <span style={{ color: accentColor }}>✓</span>
-                    {s.label}
-                  </li>
+                  <div
+                    key={s.id}
+                    className="flex items-center gap-3 rounded-lg border p-3 text-sm shadow-sm"
+                    style={{ borderColor: `${accentColor}33`, backgroundColor: lightColor }}
+                  >
+                    <span
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                      style={{ backgroundColor: accentColor }}
+                    >
+                      ✓
+                    </span>
+                    <span className="font-medium" style={{ color: primaryColor }}>
+                      {s.label}
+                    </span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
 
-            <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-4">
-              <h2 className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+            <div className="space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
+              <h2
+                className="text-xs font-semibold tracking-wide uppercase"
+                style={{ color: primaryColor }}
+              >
                 Aumento de demanda — gente também faz
               </h2>
               {!extras.length && (
                 <p className="text-sm text-neutral-500">Nenhum serviço extra disponível ainda.</p>
               )}
-              <ul className="space-y-1.5 text-sm">
+              <div className="space-y-2">
                 {extras.map((s) => (
-                  <li key={s.id} className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2 text-neutral-600">
-                      <span>＋</span>
-                      {s.label}
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-dashed p-3 text-sm"
+                    style={{ borderColor: `${accentColor}55` }}
+                  >
+                    <span className="flex items-center gap-3">
+                      <span
+                        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border text-xs font-bold"
+                        style={{ borderColor: accentColor, color: accentColor }}
+                      >
+                        +
+                      </span>
+                      <span className="text-neutral-700">{s.label}</span>
                     </span>
                     {s.unit_price_cents != null && (
-                      <span className="text-xs text-neutral-400">
+                      <span className="flex-shrink-0 text-xs text-neutral-400">
                         {(s.unit_price_cents / 100).toLocaleString("pt-BR", {
                           style: "currency",
                           currency: "BRL",
                         })}
                       </span>
                     )}
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
               <p className="text-xs text-neutral-400">
                 Fale com a gente para solicitar — o valor entra na estimativa do Financeiro.
               </p>
@@ -172,8 +200,8 @@ export default async function ProjetoPage() {
           </div>
         </div>
 
-        <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-4">
-          <h2 className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+        <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-4">
+          <h2 className="text-xs font-semibold tracking-wide uppercase" style={{ color: primaryColor }}>
             Histórico
           </h2>
           {!history?.length && <p className="text-sm text-neutral-500">Sem atividade ainda.</p>}

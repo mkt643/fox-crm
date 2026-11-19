@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { requireClient } from "@/lib/auth/require";
+import { PostMockup } from "@/components/post-mockup";
+import { ApprovalCard } from "../para-aprovar/approval-card";
 
 const WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
@@ -32,12 +34,26 @@ function getMonthMatrix(year: number, month: number) {
 export default async function CalendarioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; dia?: string; status?: string }>;
+  searchParams: Promise<{ month?: string; dia?: string; status?: string; post?: string }>;
 }) {
-  const { month: monthParam, dia, status: statusFilter } = await searchParams;
+  const { month: monthParam, dia, status: statusFilter, post: selectedPostId } = await searchParams;
   const activeFilter = FILTERS.some((f) => f.value === statusFilter) ? statusFilter! : "todos";
   const { supabase, client } = await requireClient();
   const todayStr = new Date().toISOString().slice(0, 10);
+
+  const { data: branding } = await supabase
+    .from("clients")
+    .select("logo_path, accent_color, secondary_color")
+    .eq("id", client.id)
+    .maybeSingle();
+  let logoUrl: string | undefined;
+  if (branding?.logo_path) {
+    const { data } = await supabase.storage
+      .from("brand-assets")
+      .createSignedUrl(branding.logo_path, 60 * 60);
+    logoUrl = data?.signedUrl;
+  }
+  const accentColor = branding?.accent_color || branding?.secondary_color || "#ee7840";
 
   const now = new Date();
   let year = now.getFullYear();
@@ -113,12 +129,15 @@ export default async function CalendarioPage({
 
   const cells = getMonthMatrix(year, month);
 
-  const qs = (overrides: { month?: string; status?: string; dia?: string }) => {
+  const qs = (overrides: { month?: string; status?: string; dia?: string; post?: string | null }) => {
     const params = new URLSearchParams();
     params.set("month", overrides.month ?? monthPrefix);
     const s = overrides.status ?? activeFilter;
     if (s !== "todos") params.set("status", s);
-    if (overrides.dia) params.set("dia", overrides.dia);
+    const d = overrides.dia ?? (dia || undefined);
+    if (d) params.set("dia", d);
+    const p = overrides.post === null ? undefined : (overrides.post ?? selectedPostId);
+    if (p) params.set("post", p);
     return `/portal/calendario?${params.toString()}`;
   };
 
@@ -133,6 +152,24 @@ export default async function CalendarioPage({
 
   const selectedDay = dia ? Number(dia) : null;
   const selectedDayPosts = selectedDay ? (postsByDay.get(selectedDay) ?? []) : [];
+
+  const selectedPost = selectedPostId ? (posts.find((p) => p.id === selectedPostId) ?? null) : null;
+  let selectedPostMedia: { id: string; url?: string; kind: string }[] = [];
+  if (selectedPost) {
+    const { data: media } = await supabase
+      .from("post_media")
+      .select("id, storage_path, kind, position")
+      .eq("post_id", selectedPost.id)
+      .order("position");
+    selectedPostMedia = await Promise.all(
+      (media ?? []).map(async (item) => {
+        const { data } = await supabase.storage
+          .from("post-media")
+          .createSignedUrl(item.storage_path, 60 * 60);
+        return { id: item.id, kind: item.kind, url: data?.signedUrl };
+      }),
+    );
+  }
 
   return (
     <div className="max-w-3xl space-y-4">
@@ -212,8 +249,15 @@ export default async function CalendarioPage({
               )}
             </div>
           );
-          return day && dayPosts.length ? (
-            <Link key={i} href={qs({ dia: String(day) })}>
+          // Um só post no dia: clicar na imagem já abre a visualização direto.
+          const targetHref =
+            day && dayPosts.length === 1
+              ? qs({ dia: String(day), post: dayPosts[0].id })
+              : day && dayPosts.length > 1
+                ? qs({ dia: String(day), post: null })
+                : null;
+          return targetHref ? (
+            <Link key={i} href={targetHref}>
               {content}
             </Link>
           ) : (
@@ -228,7 +272,7 @@ export default async function CalendarioPage({
             <h2 className="text-sm font-semibold">
               Posts de {String(selectedDay).padStart(2, "0")}/{String(month + 1).padStart(2, "0")}
             </h2>
-            <Link href={qs({})} className="text-xs text-neutral-400 hover:text-neutral-700">
+            <Link href={qs({ dia: "", post: null })} className="text-xs text-neutral-400 hover:text-neutral-700">
               Fechar ✕
             </Link>
           </div>
@@ -236,34 +280,72 @@ export default async function CalendarioPage({
             {selectedDayPosts.map((p) => {
               const state = postState(p);
               const badge = STATUS_BADGE[state];
+              const isActive = p.id === selectedPostId;
               return (
-                <li
-                  key={p.id}
-                  className="flex items-center justify-between gap-3 rounded-md border border-neutral-100 bg-fox-cream/50 p-3 text-sm"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{p.caption?.slice(0, 60) || "Sem legenda"}</p>
-                    <p className="text-xs text-neutral-500 uppercase">{p.type}</p>
-                  </div>
-                  <div className="flex flex-shrink-0 items-center gap-2">
+                <li key={p.id}>
+                  <Link
+                    href={qs({ dia: String(selectedDay), post: p.id })}
+                    className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm transition ${
+                      isActive
+                        ? "border-fox-orange bg-fox-cream"
+                        : "border-neutral-100 bg-fox-cream/50 hover:border-fox-orange"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{p.caption?.slice(0, 60) || "Sem legenda"}</p>
+                      <p className="text-xs text-neutral-500 uppercase">{p.type}</p>
+                    </div>
                     {badge && (
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.style}`}>
+                      <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${badge.style}`}>
                         {badge.label}
                       </span>
                     )}
-                    {p.status === "com_cliente" && (
-                      <Link
-                        href="/portal/para-aprovar"
-                        className="text-xs font-medium text-fox-orange hover:underline"
-                      >
-                        Aprovar ›
-                      </Link>
-                    )}
-                  </div>
+                  </Link>
                 </li>
               );
             })}
           </ul>
+        </div>
+      )}
+
+      {selectedPost && (
+        <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          {selectedPost.status === "com_cliente" ? (
+            <ApprovalCard
+              postId={selectedPost.id}
+              type={selectedPost.type}
+              caption={selectedPost.caption}
+              scheduledDate={selectedPost.scheduled_date}
+              media={selectedPostMedia}
+              clientName={client.name}
+              logoUrl={logoUrl}
+              accentColor={accentColor}
+            />
+          ) : (
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-center">
+              <PostMockup
+                type={selectedPost.type}
+                caption={selectedPost.caption}
+                scheduledDate={selectedPost.scheduled_date}
+                media={selectedPostMedia}
+                clientName={client.name}
+                logoUrl={logoUrl}
+                accentColor={accentColor}
+              />
+              <div className="w-full max-w-md flex-1 space-y-2 lg:max-w-lg">
+                <p className="text-xs font-semibold tracking-wide text-neutral-400 uppercase">Legenda</p>
+                <p className="rounded-md border border-neutral-100 bg-fox-cream/60 p-3 text-sm leading-relaxed whitespace-pre-wrap">
+                  {selectedPost.caption || "Sem legenda"}
+                </p>
+                {selectedPost.scheduled_date && (
+                  <p className="text-xs text-neutral-500">
+                    {postState(selectedPost) === "aprovado_publicado" ? "Publicado em" : "Previsto para"}{" "}
+                    {selectedPost.scheduled_date}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
